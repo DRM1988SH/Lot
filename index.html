@@ -3,2738 +3,1363 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>برنامج الفحوصات المخبرية</title>
+    <title>نظام الحضور - شركة الجزيرة الخضراء</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=PT+Serif:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
     <style>
         :root {
-            --primary-color: #D2B48C; /* Light Brown */
-            --secondary-color: #A52A2A; /* Brown */
-            --accent-color: #87CEEB; /* Sky Blue */
-            --light-green: #C8D5B9; /* Light Greenish Brown */
-            --button-color-1: #4CAF50;
-            --button-color-2: #2196F3;
-            --button-color-3: #FF9800;
-            --button-color-4: #9C27B0;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Arial', sans-serif;
-            transition: all 0.3s ease;
+            --header-height: 60px;
+            --footer-height: 20px;
+            --main-green: #dcfce7;
+            --dark-green: #166534;
         }
 
         body {
-            background-color: var(--primary-color);
-            color: #333;
-            overflow-x: hidden;
-        }
-
-        .container {
-            width: 100%;
-            min-height: 100vh;
+            font-family: 'Cairo', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f3f4f6;
+            height: 100vh;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+            overflow: hidden;
         }
 
-        /* Welcome Screen */
-        .welcome-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: var(--primary-color);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
-
-        .welcome-screen img {
-            max-width: 300px;
-            max-height: 300px;
-            margin-bottom: 20px;
-        }
-
-        /* Login Screen */
-        .login-screen {
-            width: 100%;
-            max-width: 500px;
-            background-color: white;
-            border-radius: 10px;
-            padding: 30px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            display: none;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .login-screen img {
-            max-width: 200px;
-            max-height: 100px;
-            margin-bottom: 20px;
-        }
-
-        .login-screen h2 {
-            margin-bottom: 20px;
-            color: var(--secondary-color);
-        }
-
-        .login-screen input {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 15px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 16px;
-        }
-
-        .login-screen button {
-            width: 100%;
-            padding: 12px;
-            background-color: var(--button-color-1);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            cursor: pointer;
-            margin-bottom: 15px;
-        }
-
-        .login-screen button:hover {
-            background-color: #45a049;
-        }
-
-        .language-switcher {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .language-btn {
-            padding: 8px 15px;
-            border: none;
-            border-radius: 5px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .language-btn.active {
-            background-color: var(--secondary-color);
-            color: white;
-        }
-
-        /* Dashboard */
-        .dashboard {
-            width: 100%;
-            display: none;
-            flex-direction: column;
-            background-color: white;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .dashboard-header {
+        header {
+            height: var(--header-height);
+            background-color: var(--main-green);
+            flex-shrink: 0;
             display: flex;
             align-items: center;
-            margin-bottom: 20px;
+            padding: 0 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 50;
         }
 
-        .dashboard-header img {
-            max-width: 80px;
-            max-height: 80px;
-            margin-left: 15px;
-        }
-
-        .dashboard-header h2 {
-            color: var(--secondary-color);
-        }
-
-        .dashboard-buttons {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            width: 100%;
-        }
-
-        .dashboard-btn {
-            padding: 15px;
-            border: none;
-            border-radius: 8px;
-            color: white;
-            font-size: 16px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .dashboard-btn i {
-            font-size: 20px;
-        }
-
-        .btn-1 { background-color: var(--button-color-1); }
-        .btn-2 { background-color: var(--button-color-2); }
-        .btn-3 { background-color: var(--button-color-3); }
-        .btn-4 { background-color: var(--button-color-4); }
-
-        .dashboard-btn:hover {
-            opacity: 0.9;
-            transform: translateY(-3px);
-        }
-
-        /* Data Entry Screen */
-        .data-entry {
-            width: 100%;
-            display: none;
-            flex-direction: column;
-            background-color: white;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .data-entry-header {
+        footer {
+            height: var(--footer-height);
+            background-color: #e5e7eb;
+            flex-shrink: 0;
+            font-size: 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            padding: 0 10px;
+            border-top: 1px solid #ccc;
+            z-index: 50;
         }
 
-        .data-entry-header img {
-            max-width: 80px;
-            max-height: 80px;
-        }
-
-        .data-entry-header h2 {
-            color: var(--secondary-color);
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-
-        .form-group input,
-        .form-group select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 16px;
-        }
-
-        .form-section {
-            border: 1px solid #ddd;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-
-        .form-section h3 {
-            margin-bottom: 15px;
-            color: var(--secondary-color);
-        }
-
-        .test-number {
-            font-weight: bold;
-            font-size: 18px;
-            color: var(--secondary-color);
-            margin-bottom: 15px;
-        }
-
-        .form-actions {
+        #app-container {
+            flex-grow: 1;
             display: flex;
-            justify-content: space-between;
-            margin-top: 20px;
+            overflow: hidden;
+            height: calc(100vh - var(--header-height) - var(--footer-height));
         }
 
-        .form-actions button {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            color: white;
-            font-size: 16px;
-            cursor: pointer;
-        }
-
-        /* Report Screen */
-        .report-screen {
-            width: 100%;
-            display: none;
+        aside {
+            width: 250px;
+            background-color: #ffffff;
+            border-left: 1px solid #e5e7eb;
+            display: flex;
             flex-direction: column;
-            background-color: white;
-            border-radius: 10px;
+            transition: transform 0.3s ease;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        main {
+            flex-grow: 1;
+            overflow-y: auto;
             padding: 20px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            background-color: #f8fafc;
+            position: relative;
         }
 
-        .report-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .report-header h2 {
-            color: var(--secondary-color);
-        }
-
-        .filters {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .filters select,
-        .filters input {
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-        }
-
-        table {
+        .attendance-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
+            font-size: 0.85rem;
+            background: white;
         }
-
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
+        .attendance-table th, .attendance-table td {
+            border: 1px solid #cbd5e1;
+            padding: 2px;
             text-align: center;
+            vertical-align: middle;
+            height: 35px;
         }
-
-        th {
-            background-color: var(--secondary-color);
-            color: white;
+        .attendance-table th {
+            background-color: #f1f5f9;
+            font-weight: bold;
+            white-space: nowrap;
         }
-
-        tr:nth-child(even) {
-            background-color: #f2f2f2;
+        
+        .attendance-select {
+            width: 100%;
+            height: 100%;
+            border: none;
+            text-align: center;
+            background-color: transparent;
+            cursor: pointer;
+            font-weight: bold;
+            color: #374151;
+            -webkit-appearance: none; 
+            -moz-appearance: none;
+            appearance: none;
         }
-
-        .report-footer {
+        .attendance-select:hover {
+            background-color: #f0fdf4; 
+        }
+        .attendance-select:focus {
+            outline: 2px solid #22c55e;
+            background-color: #fff;
+        }
+        
+        #login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #f0fdf4;
+            z-index: 100;
             display: flex;
-            justify-content: space-between;
-            margin-top: 20px;
-            padding-top: 10px;
-            border-top: 1px solid #ddd;
+            justify-content: flex-start;
+            align-items: flex-start;
+            padding: 50px;
         }
 
-        /* Image Modal */
-        .image-modal {
+        @media (max-width: 768px) {
+            aside {
+                position: absolute;
+                height: 100%;
+                z-index: 40;
+                transform: translateX(100%);
+            }
+            aside.open {
+                transform: translateX(0);
+            }
+            #login-overlay {
+                justify-content: center;
+                align-items: center;
+                padding: 20px;
+            }
+        }
+
+        #toast-container {
+            min-width: 250px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .signature-canvas {
+            border: 1px solid #ccc;
+            background-color: white;
+            cursor: crosshair;
+            width: 100%;
+            height: 150px;
+            touch-action: none;
+        }
+        .signature-pad {
+            position: relative;
+            width: 100%;
+            height: 150px;
+        }
+        .signature-clear {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            background: rgba(255,255,255,0.8);
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            padding: 2px 5px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        
+        .modal {
             display: none;
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
-            z-index: 2000;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
             justify-content: center;
             align-items: center;
         }
-
-        .image-modal-content {
-            max-width: 90%;
-            max-height: 90%;
-        }
-
-        .image-modal-content img {
-            max-width: 100%;
-            max-height: 100%;
-            border: 3px solid white;
-            border-radius: 5px;
-        }
-
-        .close-modal {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            color: white;
-            font-size: 30px;
-            cursor: pointer;
-        }
-
-        /* Settings Screen */
-        .settings-screen {
-            width: 100%;
-            display: none;
-            flex-direction: column;
+        .modal-content {
             background-color: white;
-            border-radius: 10px;
             padding: 20px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
         }
-
-        .settings-header {
-            margin-bottom: 20px;
+        
+        .signature-dropdown {
+            position: relative;
+            display: inline-block;
         }
-
-        .settings-header h2 {
-            color: var(--secondary-color);
-        }
-
-        .settings-tabs {
-            display: flex;
-            margin-bottom: 20px;
-            border-bottom: 1px solid #ddd;
-        }
-
-        .settings-tab {
-            padding: 10px 20px;
-            cursor: pointer;
-            border-bottom: 3px solid transparent;
-        }
-
-        .settings-tab.active {
-            border-bottom: 3px solid var(--secondary-color);
-            font-weight: bold;
-        }
-
-        .settings-content {
+        .signature-dropdown-content {
             display: none;
+            position: absolute;
+            background-color: white;
+            min-width: 300px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            z-index: 1;
+            padding: 10px;
+            border-radius: 5px;
+            right: 0;
         }
-
-        .settings-content.active {
+        .signature-dropdown:hover .signature-dropdown-content {
             display: block;
         }
-
-        .color-options {
-            display: flex;
-            gap: 15px;
-            margin-top: 15px;
-        }
-
-        .color-option {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            cursor: pointer;
-            border: 3px solid transparent;
-        }
-
-        .color-option.selected {
-            border-color: #333;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .container {
-                padding: 10px;
-            }
-
-            .dashboard-buttons {
-                grid-template-columns: 1fr;
-            }
-
-            .data-entry-header, .report-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
-            }
-
-            .data-entry-header img, .report-header img {
-                align-self: flex-end;
-            }
-
-            .filters {
-                flex-direction: column;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .login-screen {
-                padding: 20px;
-            }
-
-            .form-actions {
-                flex-direction: column;
-                gap: 10px;
-            }
-
-            .form-actions button {
-                width: 100%;
-            }
+        
+        .attendance-days {
+            font-weight: bold;
+            color: #166534;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Welcome Screen -->
-        <div class="welcome-screen" id="welcomeScreen">
-            <img id="welcomeImage" src="" alt="Welcome Image">
-            <h2 id="welcomeText">مرحباً بكم في برنامج الفحوصات المخبرية</h2>
-        </div>
 
-        <!-- Login Screen -->
-        <div class="login-screen" id="loginScreen">
-            <img id="loginImage" src="" alt="Login Image">
-            <h2 id="loginTitle">تسجيل الدخول</h2>
-            
-            <div class="language-switcher">
-                <button class="language-btn active" id="arabicBtn">A</button>
-                <button class="language-btn" id="englishBtn">E</button>
-            </div>
-            
-            <input type="text" id="employeeId" placeholder="الرقم الوظيفي">
-            <button id="loginBtn">تسجيل الدخول</button>
-        </div>
+    <div id="toast-container" class="fixed top-5 left-1/2 transform -translate-x-1/2 z-[1000] transition-opacity duration-300 opacity-0 pointer-events-none">
+        <div id="toast-message" class="rounded-lg shadow-xl p-4 text-white font-semibold"></div>
+    </div>
 
-        <!-- Dashboard -->
-        <div class="dashboard" id="dashboard">
-            <div class="dashboard-header">
-                <img id="dashboardImage" src="" alt="Dashboard Image">
-                <h2 id="dashboardTitle">مرحباً <span id="usernameDisplay"></span></h2>
+    <div id="login-overlay">
+        <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-sm border-t-4 border-green-600">
+            <h2 class="text-2xl font-bold mb-6 text-green-800 text-center">تسجيل الدخول</h2>
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2">الرقم الوظيفي</label>
+                <input type="number" id="login-id" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="أدخل الرقم الوظيفي">
             </div>
-            
-            <div class="dashboard-buttons">
-                <button class="dashboard-btn btn-1" id="dataEntryBtn">
-                    <i class="fas fa-flask"></i>
-                    <span id="dataEntryText">إدخال الاختبارات</span>
-                </button>
-                <button class="dashboard-btn btn-2" id="reportBtn">
-                    <i class="fas fa-file-alt"></i>
-                    <span id="reportText">التقرير</span>
-                </button>
-                <button class="dashboard-btn btn-3" id="settingsBtn">
-                    <i class="fas fa-cog"></i>
-                    <span id="settingsText">الإعدادات</span>
-                </button>
-                <button class="dashboard-btn btn-4" id="logoutBtn">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span id="logoutText">تسجيل خروج</span>
-                </button>
-            </div>
+            <button onclick="login()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition">
+                دخول
+            </button>
+            <p class="mt-4 text-xs text-gray-500 text-center">
+                مدير النظام: 600 | معتمد: 500 <br> مشرف: 400 | عقد: 100
+            </p>
         </div>
+    </div>
 
-        <!-- Data Entry Screen -->
-        <div class="data-entry" id="dataEntryScreen">
-            <div class="data-entry-header">
-                <h2 id="dataEntryTitle">إدخال الفحوصات المختبرية</h2>
-                <img id="dataEntryImage" src="" alt="Data Entry Image">
-            </div>
-            
-            <div class="form-group">
-                <label id="dateLabel">التاريخ:</label>
-                <input type="date" id="testDate">
-            </div>
-            
-            <div class="form-group">
-                <label id="timeLabel">الوقت:</label>
-                <input type="time" id="testTime">
-            </div>
-            
-            <div class="form-group">
-                <label id="locationLabel">الموقع:</label>
-                <select id="mainLocation">
-                    <option value="">-- اختر الموقع الرئيسي --</option>
-                    <option value="مسالخ">مسالخ</option>
-                    <option value="أسواق مواشي">أسواق مواشي</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label id="subLocationLabel">الموقع الفرعي:</label>
-                <select id="subLocation" disabled>
-                    <option value="">-- اختر الموقع الفرعي --</option>
-                </select>
-            </div>
-            
-            <div class="test-number" id="testNumber">رقم الاختبار: LT-0001</div>
-            
-            <div class="form-section">
-                <h3 id="animalInfoTitle">معلومات الحيوان</h3>
-                
-                <div class="form-group">
-                    <label id="ownerLabel">صاحب الحيوان:</label>
-                    <input type="text" id="ownerName" required>
-                </div>
-                
-                <div class="form-group">
-                    <label id="phoneLabel">رقم التلفون:</label>
-                    <input type="tel" id="phoneNumber">
-                </div>
-                
-                <div class="form-group">
-                    <label id="animalTypeLabel">نوع الحيوان:</label>
-                    <select id="animalType" required>
-                        <option value="">-- اختر نوع الحيوان --</option>
-                        <option value="خروف">خروف</option>
-                        <option value="ماعز">ماعز</option>
-                        <option value="جمال">جمال</option>
-                        <option value="بقر">بقر</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label id="animalGenderLabel">جنس الحيوان:</label>
-                    <select id="animalGender" required>
-                        <option value="">-- اختر الجنس --</option>
-                        <option value="ذكر">ذكر</option>
-                        <option value="انثى">انثى</option>
-                    </select>
-                </div>
-            </div>
-            
-            <div class="form-section">
-                <h3 id="testInfoTitle">معلومات الاختبار</h3>
-                
-                <div class="form-group">
-                    <label id="sampleTypeLabel">نوع العينة:</label>
-                    <select id="sampleType" required>
-                        <option value="">-- اختر نوع العينة --</option>
-                        <option value="عينة دم">عينة دم</option>
-                        <option value="شحوم">شحوم</option>
-                        <option value="لحم">لحم</option>
-                        <option value="أخرى">أخرى</option>
-                    </select>
-                </div>
-                
-                <div class="form-group" id="otherSampleTypeContainer" style="display: none;">
-                    <label id="otherSampleTypeLabel">حدد نوع العينة:</label>
-                    <input type="text" id="otherSampleType">
-                </div>
-                
-                <div class="form-group">
-                    <label id="testTypeLabel">نوع الاختبار:</label>
-                    <select id="testType" required>
-                        <option value="">-- اختر نوع الاختبار --</option>
-                        <option value="بروسيلا RBT">بروسيلا RBT</option>
-                        <option value="يرقان Juandice">يرقان Juandice</option>
-                        <option value="رائحة Odor">رائحة Odor</option>
-                        <option value="اختبار بقايا المضادات الحيوية Antibiotic residues">اختبار بقايا المضادات الحيوية Antibiotic residues</option>
-                        <option value="أخرى">أخرى</option>
-                    </select>
-                </div>
-                
-                <div class="form-group" id="otherTestTypeContainer" style="display: none;">
-                    <label id="otherTestTypeLabel">حدد نوع الاختبار:</label>
-                    <input type="text" id="otherTestType">
-                </div>
-                
-                <div class="form-group">
-                    <label id="resultLabel">نتيجة الاختبار:</label>
-                    <select id="testResult" required>
-                        <option value="">-- اختر النتيجة --</option>
-                        <option value="سلبية -Ve">سلبية -Ve</option>
-                        <option value="إيجابية +VE">إيجابية +VE</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label id="imageLabel">رفع صورة (اختياري):</label>
-                    <input type="file" id="testImage" accept="image/*">
-                </div>
-            </div>
-            
-            <div class="form-actions">
-                <button class="btn-1" id="addTestBtn">
-                    <i class="fas fa-plus"></i>
-                    <span id="addTestText">إضافة</span>
-                </button>
-                <button class="btn-2" id="viewReportBtn">
-                    <i class="fas fa-file-alt"></i>
-                    <span id="viewReportText">التقرير</span>
-                </button>
-                <button class="btn-4" id="backToDashboardBtn">
-                    <i class="fas fa-arrow-left"></i>
-                    <span id="backText">رجوع</span>
-                </button>
-            </div>
+    <header class="flex justify-between">
+        <div class="flex items-center">
+            <button id="menu-toggle" class="md:hidden text-green-800 text-xl ml-4">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h1 class="text-xl font-bold text-green-800">نظام الحضور والانصراف</h1>
         </div>
-
-        <!-- Report Screen -->
-        <div class="report-screen" id="reportScreen">
-            <div class="report-header">
-                <h2 id="reportTitle">تقرير الفحوصات المختبرية</h2>
-            </div>
-            
-            <div class="filters">
-                <select id="reportMainLocationFilter">
-                    <option value="">جميع المواقع الرئيسية</option>
-                    <option value="مسالخ">مسالخ</option>
-                    <option value="أسواق مواشي">أسواق مواشي</option>
-                </select>
-                
-                <select id="reportSubLocationFilter" disabled>
-                    <option value="">جميع المواقع الفرعية</option>
-                </select>
-                
-                <input type="date" id="reportDateFilter">
-                
-                <button class="btn-1" id="filterReportBtn">
-                    <i class="fas fa-filter"></i>
-                    <span id="filterText">تصفية</span>
-                </button>
-            </div>
-            
-            <div style="overflow-x: auto;">
-                <table id="reportTable">
-                    <thead>
-                        <tr>
-                            <th id="serialHeader">#</th>
-                            <th id="dateHeader">التاريخ</th>
-                            <th id="sampleNumberHeader">رقم العينة</th>
-                            <th id="mainLocationHeader">الموقع الرئيسي</th>
-                            <th id="subLocationHeader">الموقع الفرعي</th>
-                            <th id="ownerHeader">صاحب الحيوان</th>
-                            <th id="phoneHeader">رقم التلفون</th>
-                            <th id="animalTypeHeader">نوع الحيوان</th>
-                            <th id="animalGenderHeader">جنس الحيوان</th>
-                            <th id="sampleTypeHeader">نوع العينة</th>
-                            <th id="testTypeHeader">نوع الاختبار</th>
-                            <th id="resultHeader">النتيجة</th>
-                            <th id="imageHeader">الصورة</th>
-                        </tr>
-                    </thead>
-                    <tbody id="reportTableBody">
-                        <!-- Data will be inserted here dynamically -->
-                    </tbody>
-                </table>
-            </div>
-            
-            <div class="report-footer">
-                <div id="userFooter">المدخل: <span id="enteredBy"></span></div>
-                <div id="pageFooter">صفحة 1 من 1</div>
-            </div>
-            
-            <div class="form-actions">
-                <button class="btn-2" id="exportPdfBtn">
-                    <i class="fas fa-file-pdf"></i>
-                    <span id="exportPdfText">تصدير PDF</span>
-                </button>
-                <button class="btn-4" id="backToDashboardFromReportBtn">
-                    <i class="fas fa-arrow-left"></i>
-                    <span id="backText2">رجوع</span>
-                </button>
-            </div>
+        <div class="flex items-center gap-4">
+            <span id="user-display" class="font-bold text-sm text-gray-700"></span>
         </div>
+    </header>
 
-        <!-- Settings Screen -->
-        <div class="settings-screen" id="settingsScreen">
-            <div class="settings-header">
-                <h2 id="settingsTitle">الإعدادات</h2>
+    <div id="app-container">
+        <aside id="sidebar">
+            <div class="p-4 flex flex-col items-center border-b">
+                <img id="sidebar-logo" src="" alt="شعار الشركة" class="w-[200px] h-[200px] object-contain mb-2 bg-gray-50 rounded hidden">
+                <div id="no-logo-text" class="w-[200px] h-[200px] flex items-center justify-center bg-gray-200 text-gray-400 rounded mb-2">
+                    لا يوجد شعار
+                </div>
             </div>
-            
-            <div class="settings-tabs">
-                <div class="settings-tab active" data-tab="users">المستخدمون</div>
-                <div class="settings-tab" data-tab="sampleTypes">أنواع العينات</div>
-                <div class="settings-tab" data-tab="testTypes">أنواع الاختبارات</div>
-                <div class="settings-tab" data-tab="locations">المواقع</div>
-                <div class="settings-tab" data-tab="images">الصور</div>
-                <div class="settings-tab" data-tab="theme">المظهر</div>
+            <nav class="flex-grow p-2">
+                <button onclick="showScreen('attendance')" class="w-full text-right p-3 mb-2 rounded hover:bg-green-50 text-gray-700 font-semibold flex items-center gap-2">
+                    <i class="fas fa-calendar-check"></i> تسجيل الحضور
+                </button>
+                <button onclick="showScreen('settings')" id="nav-settings" class="w-full text-right p-3 mb-2 rounded hover:bg-green-50 text-gray-700 font-semibold flex items-center gap-2 hidden">
+                    <i class="fas fa-cogs"></i> الإعدادات
+                </button>
+            </nav>
+            <div class="p-4 border-t">
+                <button onclick="logout()" class="w-full bg-red-50 text-red-600 p-2 rounded hover:bg-red-100 font-bold">
+                    <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+                </button>
             </div>
-            
-            <!-- Users Tab -->
-            <div class="settings-content active" id="usersTab">
-                <h3 id="usersTitle">إدارة المستخدمين</h3>
-                
-                <div class="form-group">
-                    <label id="newUsernameLabel">اسم المستخدم:</label>
-                    <input type="text" id="newUsername">
+        </aside>
+
+        <main>
+            <div id="screen-attendance" class="h-full flex flex-col hidden">
+                <div class="mb-6 text-center">
+                    <h2 class="text-2xl font-bold text-green-800">شركة الجزيرة الخضراء للمواشي والاغنام</h2>
+                    <h3 id="current-site-name" class="text-xl text-gray-600 mt-1">-- اختر الموقع --</h3>
+                    <p class="text-xs text-gray-500 mt-1">P: حضور | A: غياب | V: إجازة</p>
                 </div>
-                
-                <div class="form-group">
-                    <label id="newEmployeeIdLabel">الرقم الوظيفي:</label>
-                    <input type="text" id="newEmployeeId">
+
+                <div class="bg-white p-4 rounded shadow mb-4 flex flex-wrap gap-4 items-end justify-between">
+                    <div class="flex gap-4 flex-wrap">
+                        <div>
+                            <label class="block text-sm font-bold mb-1">الموقع (المسلخ)</label>
+                            <select id="site-select" onchange="loadAttendanceTable()" class="border p-2 rounded w-64 bg-gray-50">
+                                <option value="">-- اختر المسلخ --</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold mb-1">الشهر والسنة</label>
+                            <input type="month" id="month-picker" onchange="loadAttendanceTable()" class="border p-2 rounded bg-gray-50">
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-2">
+                        <button onclick="saveAttendance()" id="btn-save" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 hidden">
+                            <i class="fas fa-save"></i> حفظ / تقديم التقرير
+                        </button>
+                        
+                        <button onclick="approveReport('supervisor')" id="btn-approve-sup" class="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700 hidden">
+                            <i class="fas fa-check"></i> اعتماد مشرف الموقع
+                        </button>
+                        
+                        <button onclick="approveReport('approver')" id="btn-approve-app" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 hidden">
+                            <i class="fas fa-check-double"></i> اعتماد التقرير
+                        </button>
+
+                        <button onclick="exportToPDF()" id="btn-export" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
+                            <i class="fas fa-file-pdf"></i> تصدير PDF
+                        </button>
+                    </div>
                 </div>
-                
-                <div class="form-group">
-                    <label id="userMainLocationLabel">الموقع الرئيسي:</label>
-                    <select id="userMainLocation">
-                        <option value="">-- اختر الموقع الرئيسي --</option>
-                        <option value="مسالخ">مسالخ</option>
-                        <option value="أسواق مواشي">أسواق مواشي</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label id="userSubLocationLabel">الموقع الفرعي:</label>
-                    <select id="userSubLocation" disabled>
-                        <option value="">-- اختر الموقع الفرعي --</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label id="userRoleLabel">الدور:</label>
-                    <select id="userRole">
-                        <option value="admin">مدير</option>
-                        <option value="user">مستخدم عادي</option>
-                    </select>
-                </div>
-                
-                <button class="btn-1" id="addUserBtn">
-                    <i class="fas fa-user-plus"></i>
-                    <span id="addUserText">إضافة مستخدم</span>
-                </button>
-                
-                <h4 style="margin-top: 20px;" id="usersListTitle">قائمة المستخدمين</h4>
-                <table id="usersTable">
-                    <thead>
-                        <tr>
-                            <th id="userNameHeader">اسم المستخدم</th>
-                            <th id="userIdHeader">الرقم الوظيفي</th>
-                            <th id="userLocationHeader">الموقع</th>
-                            <th id="userRoleHeader">الدور</th>
-                            <th id="userActionsHeader">إجراءات</th>
-                        </tr>
-                    </thead>
-                    <tbody id="usersTableBody">
-                        <!-- Users will be listed here -->
-                    </tbody>
-                </table>
-            </div>
-            
-            <!-- Sample Types Tab -->
-            <div class="settings-content" id="sampleTypesTab">
-                <h3 id="sampleTypesTitle">إدارة أنواع العينات</h3>
-                
-                <div class="form-group">
-                    <label id="newSampleTypeLabel">نوع العينة الجديد:</label>
-                    <input type="text" id="newSampleType">
-                </div>
-                
-                <button class="btn-1" id="addSampleTypeBtn">
-                    <i class="fas fa-plus"></i>
-                    <span id="addSampleTypeText">إضافة</span>
-                </button>
-                
-                <h4 style="margin-top: 20px;" id="sampleTypesListTitle">قائمة أنواع العينات</h4>
-                <table id="sampleTypesTable">
-                    <thead>
-                        <tr>
-                            <th id="sampleTypeNameHeader">نوع العينة</th>
-                            <th id="sampleTypeActionsHeader">إجراءات</th>
-                        </tr>
-                    </thead>
-                    <tbody id="sampleTypesTableBody">
-                        <!-- Sample types will be listed here -->
-                    </tbody>
-                </table>
-            </div>
-            
-            <!-- Test Types Tab -->
-            <div class="settings-content" id="testTypesTab">
-                <h3 id="testTypesTitle">إدارة أنواع الاختبارات</h3>
-                
-                <div class="form-group">
-                    <label id="newTestTypeLabel">نوع الاختبار الجديد:</label>
-                    <input type="text" id="newTestType">
-                </div>
-                
-                <button class="btn-1" id="addTestTypeBtn">
-                    <i class="fas fa-plus"></i>
-                    <span id="addTestTypeText">إضافة</span>
-                </button>
-                
-                <h4 style="margin-top: 20px;" id="testTypesListTitle">قائمة أنواع الاختبارات</h4>
-                <table id="testTypesTable">
-                    <thead>
-                        <tr>
-                            <th id="testTypeNameHeader">نوع الاختبار</th>
-                            <th id="testTypeActionsHeader">إجراءات</th>
-                        </tr>
-                    </thead>
-                    <tbody id="testTypesTableBody">
-                        <!-- Test types will be listed here -->
-                    </tbody>
-                </table>
-            </div>
-            
-            <!-- Locations Tab -->
-            <div class="settings-content" id="locationsTab">
-                <h3 id="locationsTitle">إدارة المواقع</h3>
-                
-                <div class="form-group">
-                    <label id="newMainLocationLabel">الموقع الرئيسي الجديد:</label>
-                    <input type="text" id="newMainLocation">
-                </div>
-                
-                <button class="btn-1" id="addMainLocationBtn">
-                    <i class="fas fa-plus"></i>
-                    <span id="addMainLocationText">إضافة</span>
-                </button>
-                
-                <div class="form-group" style="margin-top: 20px;">
-                    <label id="mainLocationForSubLabel">الموقع الرئيسي:</label>
-                    <select id="mainLocationForSub">
-                        <option value="">-- اختر الموقع الرئيسي --</option>
-                        <option value="مسالخ">مسالخ</option>
-                        <option value="أسواق مواشي">أسواق مواشي</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label id="newSubLocationLabel">الموقع الفرعي الجديد:</label>
-                    <input type="text" id="newSubLocation">
-                </div>
-                
-                <button class="btn-1" id="addSubLocationBtn">
-                    <i class="fas fa-plus"></i>
-                    <span id="addSubLocationText">إضافة</span>
-                </button>
-                
-                <h4 style="margin-top: 20px;" id="locationsListTitle">قائمة المواقع</h4>
-                <table id="locationsTable">
-                    <thead>
-                        <tr>
-                            <th id="mainLocationHeaderSettings">الموقع الرئيسي</th>
-                            <th id="subLocationsHeader">المواقع الفرعية</th>
-                            <th id="locationActionsHeader">إجراءات</th>
-                        </tr>
-                    </thead>
-                    <tbody id="locationsTableBody">
-                        <!-- Locations will be listed here -->
-                    </tbody>
-                </table>
-            </div>
-            
-            <!-- Images Tab -->
-            <div class="settings-content" id="imagesTab">
-                <h3 id="imagesTitle">إدارة الصور</h3>
-                
-                <div class="form-group">
-                    <label id="imageTypeLabel">نوع الصورة:</label>
-                    <select id="imageType">
-                        <option value="welcome">شاشة الترحيب</option>
-                        <option value="login">شاشة تسجيل الدخول</option>
-                        <option value="dashboard">لوحة التحكم</option>
-                        <option value="dataEntry">شاشة إدخال البيانات</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label id="uploadImageLabel">رفع الصورة:</label>
-                    <input type="file" id="uploadImage" accept="image/*">
-                </div>
-                
-                <button class="btn-1" id="saveImageBtn">
-                    <i class="fas fa-save"></i>
-                    <span id="saveImageText">حفظ الصورة</span>
-                </button>
-                
-                <div style="margin-top: 20px;">
-                    <h4 id="currentImagesTitle">الصور الحالية</h4>
-                    <div id="currentImagesPreview">
-                        <!-- Image previews will be shown here -->
+
+                <div class="flex-grow overflow-auto bg-white rounded shadow relative">
+                    <div id="attendance-status-bar" class="p-2 text-sm border-b hidden">
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="attendance-table" id="main-table">
+                            <thead>
+                                <tr id="table-header-row">
+                                </tr>
+                            </thead>
+                            <tbody id="table-body">
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
-            
-            <!-- Theme Tab -->
-            <div class="settings-content" id="themeTab">
-                <h3 id="themeTitle">إعدادات المظهر</h3>
+
+            <div id="screen-settings" class="hidden">
+                <h2 class="text-2xl font-bold mb-4 text-gray-800 border-b pb-2">الإعدادات (مدير النظام)</h2>
                 
-                <div class="form-group">
-                    <label id="themeColorLabel">لون البرنامج:</label>
-                    <div class="color-options">
-                        <div class="color-option selected" style="background-color: #D2B48C;" data-color="light-brown"></div>
-                        <div class="color-option" style="background-color: #A52A2A;" data-color="brown"></div>
-                        <div class="color-option" style="background-color: #87CEEB;" data-color="sky-blue"></div>
-                        <div class="color-option" style="background-color: #C8D5B9;" data-color="light-green"></div>
+                <div class="bg-white p-4 rounded shadow mb-6">
+                    <h3 class="font-bold text-lg mb-3 text-green-700">شعار النظام والتقارير</h3>
+                    <input type="file" id="logo-upload" accept="image/*" class="mb-2" onchange="handleLogoUpload(this)">
+                    <p class="text-xs text-gray-500">يفضل صورة مربعة 200x200</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white p-4 rounded shadow order-2 md:order-1">
+                        <h3 class="font-bold text-lg mb-3 text-green-700">إضافة مستخدم وتوقيعه</h3>
+                        <div class="bg-gray-50 p-3 rounded mb-4 border">
+                            <label class="block text-sm font-bold mb-1">بيانات المستخدم الجديد:</label>
+                            <input type="text" id="new-user-name" placeholder="اسم المستخدم (مثل: محمد أحمد)" class="border p-2 rounded w-full mb-2">
+                            <div class="flex gap-2 mb-2">
+                                <input type="number" id="new-user-id" placeholder="الرقم الوظيفي" class="border p-2 rounded w-1/2">
+                                <select id="new-user-role" class="border p-2 rounded w-1/2">
+                                    <option value="contract_manager">مدير العقد</option>
+                                    <option value="supervisor">مشرف الموقع</option>
+                                    <option value="approver">معتمد التقارير</option>
+                                    <option value="admin">مدير النظام</option>
+                                </select>
+                            </div>
+                            <label class="block text-sm mb-1">توقيع المستخدم (صورة):</label>
+                            <input type="file" id="new-user-signature" accept="image/*" class="w-full border p-2 rounded bg-white mb-2">
+                            
+                            <div class="mb-2">
+                                <label class="block text-sm mb-1">أو التوقيع الرقمي:</label>
+                                <div class="signature-pad">
+                                    <canvas id="user-signature-canvas" class="signature-canvas"></canvas>
+                                    <button type="button" id="clear-user-signature" class="signature-clear">مسح</button>
+                                </div>
+                            </div>
+                            
+                            <button onclick="addUser()" class="bg-gray-800 text-white w-full py-2 rounded hover:bg-gray-900 transition">إضافة المستخدم</button>
+                        </div>
+
+                        <h4 class="font-bold text-sm mb-2">قائمة المستخدمين الحاليين:</h4>
+                        <div class="overflow-y-auto max-h-48 border rounded bg-white">
+                            <table class="w-full text-sm">
+                                <thead class="bg-gray-100 sticky top-0">
+                                    <tr>
+                                        <th class="p-2 text-right">الاسم</th>
+                                        <th class="p-2 text-right">الدور</th>
+                                        <th class="p-2 text-right">الرقم</th>
+                                        <th class="p-2">توقيع</th>
+                                        <th class="p-2">حذف</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="users-table-body">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-4 rounded shadow order-1 md:order-2">
+                        <h3 class="font-bold text-lg mb-3 text-green-700">إضافة موقع (مسلخ)</h3>
+                        <div class="flex gap-2 mb-4">
+                            <input type="text" id="new-site-name" placeholder="اسم المسلخ" class="border p-2 rounded flex-grow">
+                            <button onclick="addSite()" class="bg-green-600 text-white px-4 py-2 rounded">إضافة</button>
+                        </div>
+                        
+                        <div class="border-t pt-4">
+                            <h4 class="font-bold mb-2">إضافة موظف للموقع المحدد:</h4>
+                            <select id="settings-site-select" class="w-full border p-2 rounded mb-2">
+                                <option>اختر الموقع أولاً</option>
+                            </select>
+                            <input type="text" id="emp-name" placeholder="اسم الموظف" class="w-full border p-2 rounded mb-2">
+                            <select id="emp-role" class="w-full border p-2 rounded mb-2">
+                                 <option value=" مشرف المسلخ">مشرف المسلخ </option>
+                                <option value="مشرف نظافة">مشرف نظافة</option>
+                                 <option value=" محاسب">محاسب </option>
+                                <option value="قصاب">قصاب</option>
+                                <option value="عامل نظافة">عامل نظافة</option>
+                                <option value="حمال">حمال</option>
+                            </select>
+                            <label class="block text-sm mb-1">صورة التوقيع:</label>
+                            <input type="file" id="emp-signature" accept="image/*" class="w-full border p-2 rounded mb-2">
+                            
+                            <div class="mb-2">
+                                <label class="block text-sm mb-1">أو التوقيع الرقمي:</label>
+                                <div class="signature-pad">
+                                    <canvas id="employee-signature-canvas" class="signature-canvas"></canvas>
+                                    <button type="button" id="clear-employee-signature" class="signature-clear">مسح</button>
+                                </div>
+                            </div>
+                            
+                            <button onclick="addEmployee()" class="w-full bg-blue-600 text-white py-2 rounded mt-2">حفظ الموظف</button>
+                        </div>
                     </div>
                 </div>
-                
-                <button class="btn-1" id="saveThemeBtn">
-                    <i class="fas fa-save"></i>
-                    <span id="saveThemeText">حفظ الإعدادات</span>
+            </div>
+        </main>
+    </div>
+
+    <footer>
+        <div class="text-left" style="direction: ltr;">info@grisland.com</div>
+        <div class="text-right">جميع الحقوق محفوظة - للاستعمال الرسمي فقط</div>
+    </footer>
+
+    <div id="signature-modal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold" id="signature-modal-title">إضافة توقيع</h3>
+                <button onclick="closeSignatureModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
                 </button>
             </div>
-            
-            <div class="form-actions">
-                <button class="btn-4" id="backToDashboardFromSettingsBtn">
-                    <i class="fas fa-arrow-left"></i>
-                    <span id="backText3">رجوع</span>
-                </button>
+            <div class="signature-pad mb-4">
+                <canvas id="modal-signature-canvas" class="signature-canvas"></canvas>
+                <button type="button" id="clear-modal-signature" class="signature-clear">مسح</button>
+            </div>
+            <div class="flex justify-between">
+                <button onclick="saveSignature()" class="bg-green-600 text-white px-4 py-2 rounded">حفظ التوقيع</button>
+                <button onclick="closeSignatureModal()" class="bg-gray-500 text-white px-4 py-2 rounded">إلغاء</button>
             </div>
         </div>
+    </div>
 
-        <!-- Image Modal -->
-        <div class="image-modal" id="imageModal">
-            <span class="close-modal" id="closeModal">&times;</span>
-            <div class="image-modal-content">
-                <img id="modalImage" src="" alt="Enlarged Image">
+    <div id="pdf-template" style="display: none;">
+        <div style="padding: 20px; direction: rtl; font-family: 'Cairo', sans-serif;">
+            
+            <div style="margin-bottom: 30px; border-bottom: 2px solid #000; padding-bottom: 10px;">
+                <div style="position: relative; height: 120px; display: flex; align-items: center; justify-content: center;">
+                    <img id="pdf-logo" src="" style="position: absolute; left: 0; top: 10px; height: 100px; width: 100px; object-fit: contain;">
+                    
+                    <h1 style="font-family: 'PT Serif', serif; font-size: 20pt; font-weight: bold; text-align: center; width: 100%; color: #166534;">
+                        شركة الجزيرة الخضراء لتجارة المواشي والأغنام
+                    </h1>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 16pt; font-weight: bold; margin-top: 10px;">
+                    <div style="text-align: right;">التاريخ: <span id="pdf-date"></span></div>
+                    <div style="text-align: left;">الموقع: <span id="pdf-site-name"></span></div>
+                </div>
+            </div>
+
+            <div id="pdf-table-container"></div>
+
+            <div style="margin-top: 50px; display: flex; justify-content: space-around; width: 100%;">
+                
+                <div style="text-align: center; width: 250px;">
+                    <p style="font-weight: bold; font-size: 16pt; margin-bottom: 15px;">معتمد التقرير</p>
+                    <div id="pdf-approver-sign" style="min-height: 80px; display: flex; justify-content: center; align-items: center;">
+                        <div style="border-bottom: 1px dashed #000; width: 200px; margin-top: 40px;"></div>
+                    </div>
+                </div>
+
+                <div style="text-align: center; width: 250px;">
+                    <p style="font-weight: bold; font-size: 16pt; margin-bottom: 15px;">مشرف الموقع</p>
+                    <div id="pdf-supervisor-sign" style="min-height: 80px; display: flex; justify-content: center; align-items: center;">
+                        <div style="border-bottom: 1px dashed #000; width: 200px; margin-top: 40px;"></div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div style="margin-top: 50px; border-top: 1px solid #ccc; padding-top: 10px; display: flex; justify-content: space-between; font-size: 12px; height: 15px;">
+                <div style="direction: ltr;">Info@grisland.com</div>
+                <div style="text-align: center;">0568504018- الشهامة الجديدة - مسلخ الشهامة</div>
+                <div>صفحة 1-1</div>
             </div>
         </div>
     </div>
 
     <script>
-        // Global variables
-        let currentLanguage = 'arabic';
+        const DB_KEYS = {
+            USERS: 'grisland_users',
+            SITES: 'grisland_sites',
+            ATTENDANCE: 'grisland_attendance',
+            SETTINGS: 'grisland_settings',
+            APPROVALS: 'grisland_approvals'
+        };
+
         let currentUser = null;
-        let tests = [];
-        let testCounter = 1;
-        let users = [
-            { username: 'مصعب بشير', employeeId: '70062', mainLocation: '', subLocation: '', role: 'admin' }
-        ];
-        let sampleTypes = ['عينة دم', 'شحوم', 'لحم', 'أخرى'];
-        let testTypes = ['بروسيلا RBT', 'يرقان Juandice', 'رائحة Odor', 'اختبار بقايا المضادات الحيوية Antibiotic residues', 'أخرى'];
-        let locations = {
-            'مسالخ': ['مسلخ مدينة زايد', 'مسلخ المنطقة الشرقية'],
-            'أسواق مواشي': ['سوق المواشي المركزي', 'سوق المواشي الغربي']
-        };
-        let images = {
-            welcome: null,
-            login: null,
-            dashboard: null,
-            dataEntry: null
-        };
-        let theme = 'light-brown';
-
-        // Language translations
-        const translations = {
-            arabic: {
-                welcomeText: 'مرحباً بكم في برنامج الفحوصات المخبرية',
-                loginTitle: 'تسجيل الدخول',
-                employeeIdPlaceholder: 'الرقم الوظيفي',
-                loginBtn: 'تسجيل الدخول',
-                dashboardTitle: 'مرحباً',
-                dataEntryText: 'إدخال الاختبارات',
-                reportText: 'التقرير',
-                settingsText: 'الإعدادات',
-                logoutText: 'تسجيل خروج',
-                dataEntryTitle: 'إدخال الفحوصات المختبرية',
-                dateLabel: 'التاريخ:',
-                timeLabel: 'الوقت:',
-                locationLabel: 'الموقع:',
-                subLocationLabel: 'الموقع الفرعي:',
-                animalInfoTitle: 'معلومات الحيوان',
-                ownerLabel: 'صاحب الحيوان:',
-                phoneLabel: 'رقم التلفون:',
-                animalTypeLabel: 'نوع الحيوان:',
-                animalGenderLabel: 'جنس الحيوان:',
-                testInfoTitle: 'معلومات الاختبار',
-                sampleTypeLabel: 'نوع العينة:',
-                otherSampleTypeLabel: 'حدد نوع العينة:',
-                testTypeLabel: 'نوع الاختبار:',
-                otherTestTypeLabel: 'حدد نوع الاختبار:',
-                resultLabel: 'نتيجة الاختبار:',
-                imageLabel: 'رفع صورة (اختياري):',
-                addTestText: 'إضافة',
-                viewReportText: 'التقرير',
-                backText: 'رجوع',
-                reportTitle: 'تقرير الفحوصات المختبرية',
-                filterText: 'تصفية',
-                serialHeader: '#',
-                dateHeader: 'التاريخ',
-                sampleNumberHeader: 'رقم العينة',
-                mainLocationHeader: 'الموقع الرئيسي',
-                subLocationHeader: 'الموقع الفرعي',
-                ownerHeader: 'صاحب الحيوان',
-                phoneHeader: 'رقم التلفون',
-                animalTypeHeader: 'نوع الحيوان',
-                animalGenderHeader: 'جنس الحيوان',
-                sampleTypeHeader: 'نوع العينة',
-                testTypeHeader: 'نوع الاختبار',
-                resultHeader: 'النتيجة',
-                imageHeader: 'الصورة',
-                exportPdfText: 'تصدير PDF',
-                backText2: 'رجوع',
-                settingsTitle: 'الإعدادات',
-                usersTitle: 'إدارة المستخدمين',
-                newUsernameLabel: 'اسم المستخدم:',
-                newEmployeeIdLabel: 'الرقم الوظيفي:',
-                userMainLocationLabel: 'الموقع الرئيسي:',
-                userSubLocationLabel: 'الموقع الفرعي:',
-                userRoleLabel: 'الدور:',
-                addUserText: 'إضافة مستخدم',
-                usersListTitle: 'قائمة المستخدمين',
-                userNameHeader: 'اسم المستخدم',
-                userIdHeader: 'الرقم الوظيفي',
-                userLocationHeader: 'الموقع',
-                userRoleHeader: 'الدور',
-                userActionsHeader: 'إجراءات',
-                sampleTypesTitle: 'إدارة أنواع العينات',
-                newSampleTypeLabel: 'نوع العينة الجديد:',
-                addSampleTypeText: 'إضافة',
-                sampleTypesListTitle: 'قائمة أنواع العينات',
-                sampleTypeNameHeader: 'نوع العينة',
-                sampleTypeActionsHeader: 'إجراءات',
-                testTypesTitle: 'إدارة أنواع الاختبارات',
-                newTestTypeLabel: 'نوع الاختبار الجديد:',
-                addTestTypeText: 'إضافة',
-                testTypesListTitle: 'قائمة أنواع الاختبارات',
-                testTypeNameHeader: 'نوع الاختبار',
-                testTypeActionsHeader: 'إجراءات',
-                locationsTitle: 'إدارة المواقع',
-                newMainLocationLabel: 'الموقع الرئيسي الجديد:',
-                addMainLocationText: 'إضافة',
-                mainLocationForSubLabel: 'الموقع الرئيسي:',
-                newSubLocationLabel: 'الموقع الفرعي الجديد:',
-                addSubLocationText: 'إضافة',
-                locationsListTitle: 'قائمة المواقع',
-                mainLocationHeaderSettings: 'الموقع الرئيسي',
-                subLocationsHeader: 'المواقع الفرعية',
-                locationActionsHeader: 'إجراءات',
-                imagesTitle: 'إدارة الصور',
-                imageTypeLabel: 'نوع الصورة:',
-                uploadImageLabel: 'رفع الصورة:',
-                saveImageText: 'حفظ الصورة',
-                currentImagesTitle: 'الصور الحالية',
-                themeTitle: 'إعدادات المظهر',
-                themeColorLabel: 'لون البرنامج:',
-                saveThemeText: 'حفظ الإعدادات',
-                backText3: 'رجوع',
-                deleteText: 'حذف',
-                editText: 'تعديل',
-                chooseMainLocation: '-- اختر الموقع الرئيسي --',
-                chooseSubLocation: '-- اختر الموقع الفرعي --',
-                chooseAnimalType: '-- اختر نوع الحيوان --',
-                chooseGender: '-- اختر الجنس --',
-                chooseSampleType: '-- اختر نوع العينة --',
-                chooseTestType: '-- اختر نوع الاختبار --',
-                chooseResult: '-- اختر النتيجة --',
-                allMainLocations: 'جميع المواقع الرئيسية',
-                allSubLocations: 'جميع المواقع الفرعية',
-                welcomeImage: 'صورة الترحيب',
-                loginImage: 'صورة تسجيل الدخول',
-                dashboardImage: 'صورة لوحة التحكم',
-                dataEntryImage: 'صورة إدخال البيانات',
-                adminRole: 'مدير',
-                userRole: 'مستخدم عادي',
-                sheep: 'خروف',
-                goat: 'ماعز',
-                camel: 'جمال',
-                cow: 'بقر',
-                male: 'ذكر',
-                female: 'انثى',
-                bloodSample: 'عينة دم',
-                fatSample: 'شحوم',
-                meatSample: 'لحم',
-                otherSample: 'أخرى',
-                brucellaTest: 'بروسيلا RBT',
-                jaundiceTest: 'يرقان Juandice',
-                odorTest: 'رائحة Odor',
-                antibioticTest: 'اختبار بقايا المضادات الحيوية Antibiotic residues',
-                otherTest: 'أخرى',
-                negativeResult: 'سلبية -Ve',
-                positiveResult: 'إيجابية +VE'
-            },
-            english: {
-                welcomeText: 'Welcome to Laboratory Tests Program',
-                loginTitle: 'Login',
-                employeeIdPlaceholder: 'Employee ID',
-                loginBtn: 'Login',
-                dashboardTitle: 'Welcome',
-                dataEntryText: 'Enter Tests',
-                reportText: 'Report',
-                settingsText: 'Settings',
-                logoutText: 'Logout',
-                dataEntryTitle: 'Laboratory Tests Data Entry',
-                dateLabel: 'Date:',
-                timeLabel: 'Time:',
-                locationLabel: 'Location:',
-                subLocationLabel: 'Sub Location:',
-                animalInfoTitle: 'Animal Information',
-                ownerLabel: 'Animal Owner:',
-                phoneLabel: 'Phone Number:',
-                animalTypeLabel: 'Animal Type:',
-                animalGenderLabel: 'Animal Gender:',
-                testInfoTitle: 'Test Information',
-                sampleTypeLabel: 'Sample Type:',
-                otherSampleTypeLabel: 'Specify Sample Type:',
-                testTypeLabel: 'Test Type:',
-                otherTestTypeLabel: 'Specify Test Type:',
-                resultLabel: 'Test Result:',
-                imageLabel: 'Upload Image (Optional):',
-                addTestText: 'Add',
-                viewReportText: 'Report',
-                backText: 'Back',
-                reportTitle: 'Laboratory Tests Report',
-                filterText: 'Filter',
-                serialHeader: '#',
-                dateHeader: 'Date',
-                sampleNumberHeader: 'Sample No.',
-                mainLocationHeader: 'Main Location',
-                subLocationHeader: 'Sub Location',
-                ownerHeader: 'Owner',
-                phoneHeader: 'Phone',
-                animalTypeHeader: 'Animal Type',
-                animalGenderHeader: 'Animal Gender',
-                sampleTypeHeader: 'Sample Type',
-                testTypeHeader: 'Test Type',
-                resultHeader: 'Result',
-                imageHeader: 'Image',
-                exportPdfText: 'Export PDF',
-                backText2: 'Back',
-                settingsTitle: 'Settings',
-                usersTitle: 'Users Management',
-                newUsernameLabel: 'Username:',
-                newEmployeeIdLabel: 'Employee ID:',
-                userMainLocationLabel: 'Main Location:',
-                userSubLocationLabel: 'Sub Location:',
-                userRoleLabel: 'Role:',
-                addUserText: 'Add User',
-                usersListTitle: 'Users List',
-                userNameHeader: 'Username',
-                userIdHeader: 'Employee ID',
-                userLocationHeader: 'Location',
-                userRoleHeader: 'Role',
-                userActionsHeader: 'Actions',
-                sampleTypesTitle: 'Sample Types Management',
-                newSampleTypeLabel: 'New Sample Type:',
-                addSampleTypeText: 'Add',
-                sampleTypesListTitle: 'Sample Types List',
-                sampleTypeNameHeader: 'Sample Type',
-                sampleTypeActionsHeader: 'Actions',
-                testTypesTitle: 'Test Types Management',
-                newTestTypeLabel: 'New Test Type:',
-                addTestTypeText: 'Add',
-                testTypesListTitle: 'Test Types List',
-                testTypeNameHeader: 'Test Type',
-                testTypeActionsHeader: 'Actions',
-                locationsTitle: 'Locations Management',
-                newMainLocationLabel: 'New Main Location:',
-                addMainLocationText: 'Add',
-                mainLocationForSubLabel: 'Main Location:',
-                newSubLocationLabel: 'New Sub Location:',
-                addSubLocationText: 'Add',
-                locationsListTitle: 'Locations List',
-                mainLocationHeaderSettings: 'Main Location',
-                subLocationsHeader: 'Sub Locations',
-                locationActionsHeader: 'Actions',
-                imagesTitle: 'Images Management',
-                imageTypeLabel: 'Image Type:',
-                uploadImageLabel: 'Upload Image:',
-                saveImageText: 'Save Image',
-                currentImagesTitle: 'Current Images',
-                themeTitle: 'Appearance Settings',
-                themeColorLabel: 'App Color:',
-                saveThemeText: 'Save Settings',
-                backText3: 'Back',
-                deleteText: 'Delete',
-                editText: 'Edit',
-                chooseMainLocation: '-- Select Main Location --',
-                chooseSubLocation: '-- Select Sub Location --',
-                chooseAnimalType: '-- Select Animal Type --',
-                chooseGender: '-- Select Gender --',
-                chooseSampleType: '-- Select Sample Type --',
-                chooseTestType: '-- Select Test Type --',
-                chooseResult: '-- Select Result --',
-                allMainLocations: 'All Main Locations',
-                allSubLocations: 'All Sub Locations',
-                welcomeImage: 'Welcome Image',
-                loginImage: 'Login Image',
-                dashboardImage: 'Dashboard Image',
-                dataEntryImage: 'Data Entry Image',
-                adminRole: 'Admin',
-                userRole: 'User',
-                sheep: 'Sheep',
-                goat: 'Goat',
-                camel: 'Camel',
-                cow: 'Cow',
-                male: 'Male',
-                female: 'Female',
-                bloodSample: 'Blood Sample',
-                fatSample: 'Fat',
-                meatSample: 'Meat',
-                otherSample: 'Other',
-                brucellaTest: 'Brucella RBT',
-                jaundiceTest: 'Jaundice',
-                odorTest: 'Odor',
-                antibioticTest: 'Antibiotic residues',
-                otherTest: 'Other',
-                negativeResult: 'Negative -Ve',
-                positiveResult: 'Positive +VE'
+        let currentMonth = new Date().toISOString().slice(0, 7);
+        
+        let userSignatureCanvas = null;
+        let employeeSignatureCanvas = null;
+        let modalSignatureCanvas = null;
+        let userSignatureCtx = null;
+        let employeeSignatureCtx = null;
+        let modalSignatureCtx = null;
+        let isUserDrawing = false;
+        let isEmployeeDrawing = false;
+        let isModalDrawing = false;
+        
+        let currentSignatureType = null;
+        let currentSignatureId = null;
+        let currentEmpIndex = null;
+        
+        function initDB() {
+            if (!localStorage.getItem(DB_KEYS.USERS)) {
+                const defaultUsers = [
+                    { id: '600', name: 'مدير النظام', role: 'admin', signature: '' },
+                    { id: '500', name: 'معتمد التقارير', role: 'approver', signature: '' },
+                    { id: '400', name: 'مشرف الموقع', role: 'supervisor', signature: '' },
+                    { id: '100', name: 'مدير العقد', role: 'contract_manager', signature: '' }
+                ];
+                localStorage.setItem(DB_KEYS.USERS, JSON.stringify(defaultUsers));
             }
-        };
-
-        // Messages for alerts and notifications
-        const messages = {
-            arabic: {
-                loginError: 'الرقم الوظيفي غير صحيح',
-                loginSuccess: 'تم تسجيل الدخول بنجاح',
-                testAdded: 'تم إضافة الاختبار بنجاح',
-                requiredFields: 'يرجى ملء جميع الحقول المطلوبة',
-                settingsAccessDenied: 'غير مصرح لك بالوصول إلى الإعدادات',
-                confirmDelete: 'هل أنت متأكد من أنك تريد الحذف؟',
-                userAdded: 'تم إضافة المستخدم بنجاح',
-                userExists: 'الرقم الوظيفي موجود مسبقاً',
-                sampleTypeAdded: 'تم إضافة نوع العينة بنجاح',
-                sampleTypeExists: 'نوع العينة موجود مسبقاً',
-                testTypeAdded: 'تم إضافة نوع الاختبار بنجاح',
-                testTypeExists: 'نوع الاختبار موجود مسبقاً',
-                locationAdded: 'تم إضافة الموقع بنجاح',
-                locationExists: 'الموقع موجود مسبقاً',
-                imageSaved: 'تم حفظ الصورة بنجاح',
-                themeSaved: 'تم حفظ إعدادات المظهر بنجاح'
-            },
-            english: {
-                loginError: 'Invalid employee ID',
-                loginSuccess: 'Logged in successfully',
-                testAdded: 'Test added successfully',
-                requiredFields: 'Please fill all required fields',
-                settingsAccessDenied: 'You are not authorized to access settings',
-                confirmDelete: 'Are you sure you want to delete?',
-                userAdded: 'User added successfully',
-                userExists: 'Employee ID already exists',
-                sampleTypeAdded: 'Sample type added successfully',
-                sampleTypeExists: 'Sample type already exists',
-                testTypeAdded: 'Test type added successfully',
-                testTypeExists: 'Test type already exists',
-                locationAdded: 'Location added successfully',
-                locationExists: 'Location already exists',
-                imageSaved: 'Image saved successfully',
-                themeSaved: 'Theme settings saved successfully'
+            if (!localStorage.getItem(DB_KEYS.SITES)) {
+                localStorage.setItem(DB_KEYS.SITES, JSON.stringify([]));
             }
-        };
-
-        // DOM Elements
-        const welcomeScreen = document.getElementById('welcomeScreen');
-        const loginScreen = document.getElementById('loginScreen');
-        const dashboard = document.getElementById('dashboard');
-        const dataEntryScreen = document.getElementById('dataEntryScreen');
-        const reportScreen = document.getElementById('reportScreen');
-        const settingsScreen = document.getElementById('settingsScreen');
-        const imageModal = document.getElementById('imageModal');
-        const modalImage = document.getElementById('modalImage');
-        const closeModal = document.getElementById('closeModal');
-
-        // Language switcher
-        const arabicBtn = document.getElementById('arabicBtn');
-        const englishBtn = document.getElementById('englishBtn');
-
-        // Login elements
-        const employeeIdInput = document.getElementById('employeeId');
-        const loginBtn = document.getElementById('loginBtn');
-
-        // Dashboard elements
-        const usernameDisplay = document.getElementById('usernameDisplay');
-        const dataEntryBtn = document.getElementById('dataEntryBtn');
-        const reportBtn = document.getElementById('reportBtn');
-        const settingsBtn = document.getElementById('settingsBtn');
-        const logoutBtn = document.getElementById('logoutBtn');
-
-        // Data entry elements
-        const testDateInput = document.getElementById('testDate');
-        const testTimeInput = document.getElementById('testTime');
-        const mainLocationSelect = document.getElementById('mainLocation');
-        const subLocationSelect = document.getElementById('subLocation');
-        const testNumberDisplay = document.getElementById('testNumber');
-        const ownerNameInput = document.getElementById('ownerName');
-        const phoneNumberInput = document.getElementById('phoneNumber');
-        const animalTypeSelect = document.getElementById('animalType');
-        const animalGenderSelect = document.getElementById('animalGender');
-        const sampleTypeSelect = document.getElementById('sampleType');
-        const otherSampleTypeContainer = document.getElementById('otherSampleTypeContainer');
-        const otherSampleTypeInput = document.getElementById('otherSampleType');
-        const testTypeSelect = document.getElementById('testType');
-        const otherTestTypeContainer = document.getElementById('otherTestTypeContainer');
-        const otherTestTypeInput = document.getElementById('otherTestType');
-        const testResultSelect = document.getElementById('testResult');
-        const testImageInput = document.getElementById('testImage');
-        const addTestBtn = document.getElementById('addTestBtn');
-        const viewReportBtn = document.getElementById('viewReportBtn');
-        const backToDashboardBtn = document.getElementById('backToDashboardBtn');
-
-        // Report elements
-        const reportMainLocationFilter = document.getElementById('reportMainLocationFilter');
-        const reportSubLocationFilter = document.getElementById('reportSubLocationFilter');
-        const reportDateFilter = document.getElementById('reportDateFilter');
-        const filterReportBtn = document.getElementById('filterReportBtn');
-        const reportTableBody = document.getElementById('reportTableBody');
-        const enteredByDisplay = document.getElementById('enteredBy');
-        const exportPdfBtn = document.getElementById('exportPdfBtn');
-        const backToDashboardFromReportBtn = document.getElementById('backToDashboardFromReportBtn');
-
-        // Settings elements
-        const settingsTabs = document.querySelectorAll('.settings-tab');
-        const settingsContents = document.querySelectorAll('.settings-content');
-        const newUsernameInput = document.getElementById('newUsername');
-        const newEmployeeIdInput = document.getElementById('newEmployeeId');
-        const userMainLocationSelect = document.getElementById('userMainLocation');
-        const userSubLocationSelect = document.getElementById('userSubLocation');
-        const userRoleSelect = document.getElementById('userRole');
-        const addUserBtn = document.getElementById('addUserBtn');
-        const usersTableBody = document.getElementById('usersTableBody');
-        const newSampleTypeInput = document.getElementById('newSampleType');
-        const addSampleTypeBtn = document.getElementById('addSampleTypeBtn');
-        const sampleTypesTableBody = document.getElementById('sampleTypesTableBody');
-        const newTestTypeInput = document.getElementById('newTestType');
-        const addTestTypeBtn = document.getElementById('addTestTypeBtn');
-        const testTypesTableBody = document.getElementById('testTypesTableBody');
-        const newMainLocationInput = document.getElementById('newMainLocation');
-        const addMainLocationBtn = document.getElementById('addMainLocationBtn');
-        const mainLocationForSubSelect = document.getElementById('mainLocationForSub');
-        const newSubLocationInput = document.getElementById('newSubLocation');
-        const addSubLocationBtn = document.getElementById('addSubLocationBtn');
-        const locationsTableBody = document.getElementById('locationsTableBody');
-        const imageTypeSelect = document.getElementById('imageType');
-        const uploadImageInput = document.getElementById('uploadImage');
-        const saveImageBtn = document.getElementById('saveImageBtn');
-        const currentImagesPreview = document.getElementById('currentImagesPreview');
-        const colorOptions = document.querySelectorAll('.color-option');
-        const saveThemeBtn = document.getElementById('saveThemeBtn');
-        const backToDashboardFromSettingsBtn = document.getElementById('backToDashboardFromSettingsBtn');
-
-        // Initialize the application
-        function initApp() {
-            // Set current date and time
-            const now = new Date();
-            testDateInput.valueAsDate = now;
-            testTimeInput.value = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+            if (!localStorage.getItem(DB_KEYS.SETTINGS)) {
+                localStorage.setItem(DB_KEYS.SETTINGS, JSON.stringify({ logo: '' }));
+            }
+            if(!localStorage.getItem(DB_KEYS.ATTENDANCE)) {
+                localStorage.setItem(DB_KEYS.ATTENDANCE, JSON.stringify({}));
+            }
+            if(!localStorage.getItem(DB_KEYS.APPROVALS)) {
+                localStorage.setItem(DB_KEYS.APPROVALS, JSON.stringify({}));
+            }
+        }
+        
+        function showToast(message, type = 'success') {
+            const toastContainer = document.getElementById('toast-container');
+            const toastMessage = document.getElementById('toast-message');
             
-            // Generate test number
-            updateTestNumber();
+            toastMessage.className = 'rounded-lg shadow-xl p-4 text-white font-semibold';
             
-            // Load data from localStorage
-            loadData();
+            let bgColor = 'bg-green-600';
+            if (type === 'error') {
+                bgColor = 'bg-red-600';
+            } else if (type === 'info') {
+                bgColor = 'bg-blue-600';
+            }
+
+            toastMessage.classList.add(bgColor);
+            toastMessage.innerText = message;
             
-            // Show welcome screen first
-            showScreen('welcome');
-            
-            // After 500ms, show login screen
+            toastContainer.classList.remove('opacity-0', 'pointer-events-none');
+            toastContainer.classList.add('opacity-100');
+
             setTimeout(() => {
-                showScreen('login');
-            }, 500);
-            
-            // Set up event listeners
-            setupEventListeners();
-            
-            // Update UI with current language
-            updateLanguageUI();
+                toastContainer.classList.remove('opacity-100');
+                toastContainer.classList.add('opacity-0', 'pointer-events-none');
+            }, 2500);
         }
 
-        // Set up event listeners
-        function setupEventListeners() {
-            // Language switcher
-            arabicBtn.addEventListener('click', () => switchLanguage('arabic'));
-            englishBtn.addEventListener('click', () => switchLanguage('english'));
-            
-            // Login
-            loginBtn.addEventListener('click', handleLogin);
-            
-            // Dashboard buttons
-            dataEntryBtn.addEventListener('click', () => showScreen('dataEntry'));
-            reportBtn.addEventListener('click', () => {
-                showScreen('report');
-                generateReport();
-            });
-            settingsBtn.addEventListener('click', () => {
-                if (currentUser && currentUser.employeeId === '70062') {
-                    showScreen('settings');
-                    showSettingsTab('users');
-                } else {
-                    alert(messages[currentLanguage].settingsAccessDenied);
-                }
-            });
-            logoutBtn.addEventListener('click', handleLogout);
-            
-            // Data entry
-            mainLocationSelect.addEventListener('change', updateSubLocations);
-            sampleTypeSelect.addEventListener('change', (e) => {
-                otherSampleTypeContainer.style.display = e.target.value === translations[currentLanguage].otherSample ? 'block' : 'none';
-            });
-            testTypeSelect.addEventListener('change', (e) => {
-                otherTestTypeContainer.style.display = e.target.value === translations[currentLanguage].otherTest ? 'block' : 'none';
-            });
-            addTestBtn.addEventListener('click', addTest);
-            viewReportBtn.addEventListener('click', () => {
-                showScreen('report');
-                generateReport();
-            });
-            backToDashboardBtn.addEventListener('click', () => showScreen('dashboard'));
-            
-            // Report
-            reportMainLocationFilter.addEventListener('change', updateReportSubLocationsFilter);
-            filterReportBtn.addEventListener('click', generateReport);
-            exportPdfBtn.addEventListener('click', exportToPdf);
-            backToDashboardFromReportBtn.addEventListener('click', () => showScreen('dashboard'));
-            
-            // Settings tabs
-            settingsTabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    showSettingsTab(tab.dataset.tab);
-                });
-            });
-            
-            // Users management
-            userMainLocationSelect.addEventListener('change', updateUserSubLocations);
-            addUserBtn.addEventListener('click', addUser);
-            
-            // Sample types management
-            addSampleTypeBtn.addEventListener('click', addSampleType);
-            
-            // Test types management
-            addTestTypeBtn.addEventListener('click', addTestType);
-            
-            // Locations management
-            addMainLocationBtn.addEventListener('click', addMainLocation);
-            mainLocationForSubSelect.addEventListener('change', () => {
-                newSubLocationInput.disabled = !mainLocationForSubSelect.value;
-            });
-            addSubLocationBtn.addEventListener('click', addSubLocation);
-            
-            // Images management
-            saveImageBtn.addEventListener('click', saveImage);
-            
-            // Theme management
-            colorOptions.forEach(option => {
-                option.addEventListener('click', () => {
-                    document.querySelector('.color-option.selected').classList.remove('selected');
-                    option.classList.add('selected');
-                    theme = option.dataset.color;
-                });
-            });
-            saveThemeBtn.addEventListener('click', saveTheme);
-            
-            // Back buttons
-            backToDashboardFromSettingsBtn.addEventListener('click', () => showScreen('dashboard'));
-            
-            // Image modal
-            closeModal.addEventListener('click', () => {
-                imageModal.style.display = 'none';
-            });
-            
-            // Close modal when clicking outside the image
-            imageModal.addEventListener('click', (e) => {
-                if (e.target === imageModal) {
-                    imageModal.style.display = 'none';
-                }
-            });
-        }
+        function login() {
+            const id = document.getElementById('login-id').value;
+            const users = JSON.parse(localStorage.getItem(DB_KEYS.USERS));
+            const user = users.find(u => u.id === id);
 
-        // Show specific screen
-        function showScreen(screen) {
-            welcomeScreen.style.display = 'none';
-            loginScreen.style.display = 'none';
-            dashboard.style.display = 'none';
-            dataEntryScreen.style.display = 'none';
-            reportScreen.style.display = 'none';
-            settingsScreen.style.display = 'none';
-            
-            switch (screen) {
-                case 'welcome':
-                    welcomeScreen.style.display = 'flex';
-                    break;
-                case 'login':
-                    loginScreen.style.display = 'flex';
-                    break;
-                case 'dashboard':
-                    dashboard.style.display = 'flex';
-                    usernameDisplay.textContent = currentUser ? currentUser.username : '';
-                    // Hide settings button for non-admin users
-                    settingsBtn.style.display = currentUser && currentUser.employeeId === '70062' ? 'flex' : 'none';
-                    break;
-                case 'dataEntry':
-                    dataEntryScreen.style.display = 'flex';
-                    // Reset form
-                    resetDataEntryForm();
-                    break;
-                case 'report':
-                    reportScreen.style.display = 'flex';
-                    enteredByDisplay.textContent = currentUser ? currentUser.username : '';
-                    break;
-                case 'settings':
-                    settingsScreen.style.display = 'flex';
-                    break;
+            if (user) {
+                currentUser = user;
+                document.getElementById('login-overlay').style.display = 'none';
+                document.getElementById('user-display').innerText = `${user.name} (${getRoleName(user.role)})`;
+                loadSidebarData();
+                setupUIForRole();
+                showScreen('attendance'); 
+            } else {
+                showToast('رقم وظيفي غير صحيح', 'error');
             }
         }
 
-        // Show specific settings tab
-        function showSettingsTab(tabId) {
-            settingsTabs.forEach(tab => tab.classList.remove('active'));
-            settingsContents.forEach(content => content.classList.remove('active'));
-            
-            document.querySelector(`.settings-tab[data-tab="${tabId}"]`).classList.add('active');
-            document.getElementById(`${tabId}Tab`).classList.add('active');
-            
-            if (tabId === 'users') {
-                renderUsersTable();
-            } else if (tabId === 'sampleTypes') {
-                renderSampleTypesTable();
-            } else if (tabId === 'testTypes') {
-                renderTestTypesTable();
-            } else if (tabId === 'locations') {
-                renderLocationsTable();
-            } else if (tabId === 'images') {
-                renderCurrentImages();
-            }
-        }
-
-        // Switch language
-        function switchLanguage(lang) {
-            currentLanguage = lang;
-            
-            // Update UI buttons
-            arabicBtn.classList.toggle('active', lang === 'arabic');
-            englishBtn.classList.toggle('active', lang === 'english');
-            
-            // Update all UI text
-            updateLanguageUI();
-            
-            // Save language preference
-            localStorage.setItem('labAppLanguage', lang);
-        }
-
-        // Update UI with current language
-        function updateLanguageUI() {
-            const lang = translations[currentLanguage];
-            
-            // Update all elements with translations
-            for (const [key, value] of Object.entries(lang)) {
-                const elements = document.querySelectorAll(`[id="${key}"]`);
-                elements.forEach(el => {
-                    if (el.tagName === 'INPUT' && el.type !== 'button' && el.type !== 'submit') {
-                        el.placeholder = value;
-                    } else {
-                        el.textContent = value;
-                    }
-                });
-            }
-            
-            // Update select options
-            updateSelectOptions();
-            
-            // Update test number display
-            updateTestNumber();
-        }
-
-        // Update select options based on language
-        function updateSelectOptions() {
-            const lang = translations[currentLanguage];
-            
-            // Main location select
-            const mainLocationOptions = mainLocationSelect.querySelectorAll('option');
-            mainLocationOptions[0].textContent = lang.chooseMainLocation;
-            mainLocationOptions[1].textContent = 'مسالخ'; // These stay in Arabic as they are data
-            mainLocationOptions[2].textContent = 'أسواق مواشي';
-            
-            // Sub location select
-            const subLocationOptions = subLocationSelect.querySelectorAll('option');
-            subLocationOptions[0].textContent = lang.chooseSubLocation;
-            
-            // Animal type select
-            const animalTypeOptions = animalTypeSelect.querySelectorAll('option');
-            animalTypeOptions[0].textContent = lang.chooseAnimalType;
-            animalTypeOptions[1].textContent = lang.sheep;
-            animalTypeOptions[2].textContent = lang.goat;
-            animalTypeOptions[3].textContent = lang.camel;
-            animalTypeOptions[4].textContent = lang.cow;
-            
-            // Animal gender select
-            const animalGenderOptions = animalGenderSelect.querySelectorAll('option');
-            animalGenderOptions[0].textContent = lang.chooseGender;
-            animalGenderOptions[1].textContent = lang.male;
-            animalGenderOptions[2].textContent = lang.female;
-            
-            // Sample type select
-            const sampleTypeOptions = sampleTypeSelect.querySelectorAll('option');
-            sampleTypeOptions[0].textContent = lang.chooseSampleType;
-            sampleTypeOptions[1].textContent = lang.bloodSample;
-            sampleTypeOptions[2].textContent = lang.fatSample;
-            sampleTypeOptions[3].textContent = lang.meatSample;
-            sampleTypeOptions[4].textContent = lang.otherSample;
-            
-            // Test type select
-            const testTypeOptions = testTypeSelect.querySelectorAll('option');
-            testTypeOptions[0].textContent = lang.chooseTestType;
-            testTypeOptions[1].textContent = lang.brucellaTest;
-            testTypeOptions[2].textContent = lang.jaundiceTest;
-            testTypeOptions[3].textContent = lang.odorTest;
-            testTypeOptions[4].textContent = lang.antibioticTest;
-            testTypeOptions[5].textContent = lang.otherTest;
-            
-            // Test result select
-            const testResultOptions = testResultSelect.querySelectorAll('option');
-            testResultOptions[0].textContent = lang.chooseResult;
-            testResultOptions[1].textContent = lang.negativeResult;
-            testResultOptions[2].textContent = lang.positiveResult;
-            
-            // Report main location filter
-            const reportMainLocationOptions = reportMainLocationFilter.querySelectorAll('option');
-            reportMainLocationOptions[0].textContent = lang.allMainLocations;
-            reportMainLocationOptions[1].textContent = 'مسالخ';
-            reportMainLocationOptions[2].textContent = 'أسواق مواشي';
-            
-            // Report sub location filter
-            const reportSubLocationOptions = reportSubLocationFilter.querySelectorAll('option');
-            reportSubLocationOptions[0].textContent = lang.allSubLocations;
-            
-            // User main location select
-            const userMainLocationOptions = userMainLocationSelect.querySelectorAll('option');
-            userMainLocationOptions[0].textContent = lang.chooseMainLocation;
-            userMainLocationOptions[1].textContent = 'مسالخ';
-            userMainLocationOptions[2].textContent = 'أسواق مواشي';
-            
-            // User sub location select
-            const userSubLocationOptions = userSubLocationSelect.querySelectorAll('option');
-            userSubLocationOptions[0].textContent = lang.chooseSubLocation;
-            
-            // User role select
-            const userRoleOptions = userRoleSelect.querySelectorAll('option');
-            userRoleOptions[0].textContent = lang.adminRole;
-            userRoleOptions[1].textContent = lang.userRole;
-            
-            // Image type select
-            const imageTypeOptions = imageTypeSelect.querySelectorAll('option');
-            imageTypeOptions[0].textContent = lang.welcomeImage;
-            imageTypeOptions[1].textContent = lang.loginImage;
-            imageTypeOptions[2].textContent = lang.dashboardImage;
-            imageTypeOptions[3].textContent = lang.dataEntryImage;
-        }
-
-        // Handle login
-        function handleLogin() {
-            const employeeId = employeeIdInput.value.trim();
-            
-            if (!employeeId) {
-                alert(messages[currentLanguage].requiredFields);
-                return;
-            }
-            
-            const user = users.find(u => u.employeeId === employeeId);
-            
-            if (!user) {
-                alert(messages[currentLanguage].loginError);
-                return;
-            }
-            
-            currentUser = user;
-            alert(messages[currentLanguage].loginSuccess);
-            showScreen('dashboard');
-        }
-
-        // Handle logout
-        function handleLogout() {
+        function logout() {
             currentUser = null;
-            employeeIdInput.value = '';
-            showScreen('login');
+            document.getElementById('login-id').value = '';
+            document.getElementById('login-overlay').style.display = 'flex';
         }
 
-        // Update test number
-        function updateTestNumber() {
-            testNumberDisplay.textContent = `${currentLanguage === 'arabic' ? 'رقم الاختبار: ' : 'Test Number: '}LT-${testCounter.toString().padStart(4, '0')}`;
-        }
+        function setupUIForRole() {
+            const role = currentUser.role;
 
-        // Reset data entry form
-        function resetDataEntryForm() {
-            const now = new Date();
-            testDateInput.valueAsDate = now;
-            testTimeInput.value = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-            
-            mainLocationSelect.value = '';
-            subLocationSelect.value = '';
-            subLocationSelect.disabled = true;
-            
-            ownerNameInput.value = '';
-            phoneNumberInput.value = '';
-            animalTypeSelect.value = '';
-            animalGenderSelect.value = '';
-            
-            sampleTypeSelect.value = '';
-            otherSampleTypeContainer.style.display = 'none';
-            otherSampleTypeInput.value = '';
-            
-            testTypeSelect.value = '';
-            otherTestTypeContainer.style.display = 'none';
-            otherTestTypeInput.value = '';
-            
-            testResultSelect.value = '';
-            testImageInput.value = '';
-            
-            testCounter++;
-            updateTestNumber();
-        }
-
-        // Update sub locations based on main location
-        function updateSubLocations() {
-            const mainLocation = mainLocationSelect.value;
-            
-            subLocationSelect.innerHTML = `<option value="">${translations[currentLanguage].chooseSubLocation}</option>`;
-            
-            if (mainLocation && locations[mainLocation]) {
-                subLocationSelect.disabled = false;
-                
-                locations[mainLocation].forEach(subLocation => {
-                    const option = document.createElement('option');
-                    option.value = subLocation;
-                    option.textContent = subLocation;
-                    subLocationSelect.appendChild(option);
-                });
+            const navSettings = document.getElementById('nav-settings');
+            if (role === 'admin') {
+                navSettings.classList.remove('hidden');
+                loadSettingsView();
+                initSignaturePads();
             } else {
-                subLocationSelect.disabled = true;
+                navSettings.classList.add('hidden');
+            }
+
+            loadSitesDropdown();
+            document.getElementById('month-picker').value = currentMonth;
+        }
+
+        function showScreen(screenId) {
+            document.getElementById('screen-attendance').classList.add('hidden');
+            document.getElementById('screen-settings').classList.add('hidden');
+            document.getElementById(`screen-${screenId}`).classList.remove('hidden');
+            
+            if(window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.remove('open');
             }
         }
 
-        // Update report sub locations filter based on main location filter
-        function updateReportSubLocationsFilter() {
-            const mainLocation = reportMainLocationFilter.value;
-            
-            reportSubLocationFilter.innerHTML = `<option value="">${translations[currentLanguage].allSubLocations}</option>`;
-            
-            if (mainLocation && locations[mainLocation]) {
-                reportSubLocationFilter.disabled = false;
-                
-                locations[mainLocation].forEach(subLocation => {
-                    const option = document.createElement('option');
-                    option.value = subLocation;
-                    option.textContent = subLocation;
-                    reportSubLocationFilter.appendChild(option);
-                });
-            } else {
-                reportSubLocationFilter.disabled = true;
-            }
+        function loadSitesDropdown() {
+            const sites = JSON.parse(localStorage.getItem(DB_KEYS.SITES));
+            const select = document.getElementById('site-select');
+            select.innerHTML = '<option value="">-- اختر المسلخ --</option>';
+            sites.forEach(site => {
+                const opt = document.createElement('option');
+                opt.value = site.id;
+                opt.innerText = site.name;
+                select.appendChild(opt);
+            });
         }
 
-        // Update user sub locations based on main location
-        function updateUserSubLocations() {
-            const mainLocation = userMainLocationSelect.value;
+        function loadAttendanceTable() {
+            const siteId = document.getElementById('site-select').value;
+            const monthVal = document.getElementById('month-picker').value;
+            const siteNameEl = document.getElementById('current-site-name');
+            const tableHead = document.getElementById('table-header-row');
+            const tableBody = document.getElementById('table-body');
+            const statusDiv = document.getElementById('attendance-status-bar');
             
-            userSubLocationSelect.innerHTML = `<option value="">${translations[currentLanguage].chooseSubLocation}</option>`;
-            
-            if (mainLocation && locations[mainLocation]) {
-                userSubLocationSelect.disabled = false;
-                
-                locations[mainLocation].forEach(subLocation => {
-                    const option = document.createElement('option');
-                    option.value = subLocation;
-                    option.textContent = subLocation;
-                    userSubLocationSelect.appendChild(option);
-                });
-            } else {
-                userSubLocationSelect.disabled = true;
+            const btnSave = document.getElementById('btn-save');
+            const btnApproveSup = document.getElementById('btn-approve-sup');
+            const btnApproveApp = document.getElementById('btn-approve-app');
+
+            btnSave.classList.add('hidden');
+            btnApproveSup.classList.add('hidden');
+            btnApproveApp.classList.add('hidden');
+
+            if (!siteId || !monthVal) {
+                siteNameEl.innerText = "-- اختر الموقع --";
+                tableBody.innerHTML = '<tr><td colspan="100" class="p-4 text-center text-gray-500">الرجاء اختيار الموقع والشهر</td></tr>';
+                statusDiv.classList.add('hidden');
+                return;
             }
+
+            const sites = JSON.parse(localStorage.getItem(DB_KEYS.SITES));
+            const site = sites.find(s => s.id == siteId);
+            siteNameEl.innerText = site.name;
+
+            const [year, month] = monthVal.split('-');
+            const daysInMonth = new Date(year, month, 0).getDate();
+
+            const attendanceKey = `${siteId}_${monthVal}`;
+            const allAttendance = JSON.parse(localStorage.getItem(DB_KEYS.ATTENDANCE));
+            const siteAttendance = allAttendance[attendanceKey] || {};
+
+            const allApprovals = JSON.parse(localStorage.getItem(DB_KEYS.APPROVALS));
+            const approvals = allApprovals[attendanceKey] || { supervisor: false, approver: false };
+
+            const isFullyApproved = approvals.approver === true;
+            let isSupervisorApproved = approvals.supervisor === true;
+
+            const canEdit = (currentUser.role === 'admin' || currentUser.role === 'supervisor') && !isFullyApproved;
+            
+            let statusText = "";
+            statusDiv.classList.remove('hidden');
+
+            if (isFullyApproved) {
+                statusText = "تم اعتماد التقرير نهائياً (للقراءة فقط)";
+                statusDiv.className = "p-2 bg-green-100 text-green-800 text-sm border-b";
+            } else if (isSupervisorApproved) {
+                statusText = "تم اعتماد مشرف الموقع. بانتظار معتمد التقارير.";
+                statusDiv.className = "p-2 bg-yellow-100 text-yellow-800 text-sm border-b";
+            } else {
+                statusDiv.classList.add('hidden');
+            }
+
+            if (currentUser.role === 'admin' || currentUser.role === 'supervisor') {
+                if (canEdit) {
+                    btnSave.classList.remove('hidden');
+                    if (currentUser.role === 'supervisor' && !isSupervisorApproved) {
+                         btnApproveSup.classList.remove('hidden');
+                    }
+                }
+            }
+            if (currentUser.role === 'approver' && !isFullyApproved) {
+                if(isSupervisorApproved) {
+                    btnApproveApp.classList.remove('hidden');
+                } else {
+                    showToast("تقرير الموقع لم يعتمد بعد من مشرف الموقع.", 'info');
+                }
+            }
+
+            let headerHTML = `<th class="w-32 sticky right-0 bg-gray-100 z-10">الموظف</th><th class="w-24">الوظيفة</th>`;
+            for (let i = 1; i <= daysInMonth; i++) {
+                headerHTML += `<th class="w-8">${i}</th>`;
+            }
+            headerHTML += `<th class="w-24">عدد ايام الحضور</th><th class="w-24">التوقيع</th>`;
+            tableHead.innerHTML = headerHTML;
+
+            tableBody.innerHTML = '';
+            if (!site.employees || site.employees.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="${daysInMonth + 4}" class="p-4 text-center">لا يوجد موظفين مسجلين لهذا الموقع. اذهب للإعدادات لإضافة موظفين.</td></tr>`;
+                return;
+            }
+
+            site.employees.forEach((emp, index) => {
+                const tr = document.createElement('tr');
+                let rowHTML = `<td class="sticky right-0 bg-white font-bold z-10">${emp.name}</td><td>${emp.role}</td>`;
+                
+                let attendanceDays = daysInMonth; // البدء بعدد أيام الشهر كاملة
+                
+                for (let i = 1; i <= daysInMonth; i++) {
+                    const status = siteAttendance[index] && siteAttendance[index][i] ? siteAttendance[index][i] : 'P';
+                    
+                    if (canEdit) {
+                         rowHTML += `<td>
+                            <select data-emp="${index}" data-day="${i}" class="attendance-select" onchange="updateAttendanceDays(${index}, ${daysInMonth})">
+                                <option value="P" ${status==='P'?'selected':''}>P</option>
+                                <option value="A" ${status==='A'?'selected':''}>A</option>
+                                <option value="V" ${status==='V'?'selected':''}>V</option>
+                            </select>
+                        </td>`;
+                    } else {
+                        rowHTML += `<td class="text-gray-600 font-bold">${status || 'P'}</td>`;
+                    }
+                }
+                
+                rowHTML += `<td class="attendance-days" id="attendance-days-${index}">${attendanceDays}</td>`;
+                
+                const sigSrc = emp.signature || '';
+                let signatureCell = '';
+                if(sigSrc) {
+                    signatureCell = `<td class="signature-dropdown">
+                        <img src="${sigSrc}" class="h-8 w-auto mx-auto cursor-pointer" onclick="openSignatureModal('employee', '${siteId}', ${index})">
+                        <div class="signature-dropdown-content">
+                            <p class="text-sm mb-2">إضافة توقيع جديد:</p>
+                            <button onclick="openSignatureModal('employee', '${siteId}', ${index})" class="bg-blue-500 text-white px-2 py-1 rounded text-xs">توقيع جديد</button>
+                        </div>
+                    </td>`;
+                } else {
+                    signatureCell = `<td class="signature-dropdown">
+                        <span class="text-gray-400 cursor-pointer" onclick="openSignatureModal('employee', '${siteId}', ${index})">-</span>
+                        <div class="signature-dropdown-content">
+                            <p class="text-sm mb-2">إضافة توقيع:</p>
+                            <button onclick="openSignatureModal('employee', '${siteId}', ${index})" class="bg-blue-500 text-white px-2 py-1 rounded text-xs">إضافة توقيع</button>
+                        </div>
+                    </td>`;
+                }
+                rowHTML += signatureCell;
+                
+                tr.innerHTML = rowHTML;
+                tableBody.appendChild(tr);
+                
+                updateAttendanceDays(index, daysInMonth);
+            });
         }
 
-        // Add new test
-        function addTest() {
-            // Validate required fields
-            if (!mainLocationSelect.value || !subLocationSelect.value || !ownerNameInput.value || 
-                !animalTypeSelect.value || !animalGenderSelect.value || !sampleTypeSelect.value || 
-                !testTypeSelect.value || !testResultSelect.value) {
-                alert(messages[currentLanguage].requiredFields);
+        function updateAttendanceDays(empIndex, daysInMonth) {
+            const row = document.querySelector(`tr:nth-child(${empIndex + 1})`);
+            if (!row) return;
+            
+            const daySelects = row.querySelectorAll('.attendance-select');
+            
+            let attendanceDays = daysInMonth; // البدء بعدد أيام الشهر كاملة
+            
+            daySelects.forEach(select => {
+                if (select.value === 'A') {
+                    attendanceDays--; // خصم يوم عند وجود A
+                }
+                // V لا تؤثر على الحساب
+            });
+            
+            const attendanceDaysElement = document.getElementById(`attendance-days-${empIndex}`);
+            if (attendanceDaysElement) {
+                attendanceDaysElement.textContent = attendanceDays;
+            }
+            
+            markUnsaved();
+        }
+
+        let unsavedChanges = false;
+        function markUnsaved() { unsavedChanges = true; }
+
+        function saveAttendance() {
+            const siteId = document.getElementById('site-select').value;
+            const monthVal = document.getElementById('month-picker').value;
+            if (!siteId || !monthVal) {
+                showToast('الرجاء اختيار الموقع والشهر أولاً.', 'error');
+                return;
+            }
+
+            const inputs = document.querySelectorAll('#main-table select.attendance-select');
+            const data = {};
+
+            inputs.forEach(input => {
+                const empIdx = input.getAttribute('data-emp');
+                const day = input.getAttribute('data-day');
+                const val = input.value;
+                if (!data[empIdx]) data[empIdx] = {};
+                data[empIdx][day] = val;
+            });
+
+            const allAttendance = JSON.parse(localStorage.getItem(DB_KEYS.ATTENDANCE));
+            const key = `${siteId}_${monthVal}`;
+            allAttendance[key] = data;
+            localStorage.setItem(DB_KEYS.ATTENDANCE, JSON.stringify(allAttendance));
+            
+            unsavedChanges = false;
+            showToast('تم حفظ البيانات وتقديم التقرير بنجاح.', 'success');
+            
+            loadAttendanceTable();
+        }
+
+        function approveReport(type) {
+            const siteId = document.getElementById('site-select').value;
+            const monthVal = document.getElementById('month-picker').value;
+            if (!siteId || !monthVal) {
+                showToast('الرجاء اختيار التقرير أولاً', 'error');
                 return;
             }
             
-            // Get sample type
-            let sampleType = sampleTypeSelect.value;
-            if (sampleType === translations[currentLanguage].otherSample && otherSampleTypeInput.value) {
-                sampleType = otherSampleTypeInput.value;
+            const key = `${siteId}_${monthVal}`;
+            const allApprovals = JSON.parse(localStorage.getItem(DB_KEYS.APPROVALS));
+            const current = allApprovals[key] || { supervisor: false, approver: false };
+
+            if (type === 'supervisor') {
+                if(unsavedChanges) saveAttendance();
+                current.supervisor = true;
+                showToast('تم اعتماد مشرف الموقع.', 'success');
+            } else if (type === 'approver') {
+                if (!current.supervisor) {
+                    showToast('لا يمكن الاعتماد قبل اعتماد مشرف الموقع.', 'error');
+                    return;
+                }
+                current.approver = true;
+                showToast('تم اعتماد التقرير نهائياً.', 'success');
             }
+
+            allApprovals[key] = current;
+            localStorage.setItem(DB_KEYS.APPROVALS, JSON.stringify(allApprovals));
+            loadAttendanceTable();
+        }
+
+        function loadSidebarData() {
+            const settings = JSON.parse(localStorage.getItem(DB_KEYS.SETTINGS));
+            const logoImg = document.getElementById('sidebar-logo');
+            const noLogo = document.getElementById('no-logo-text');
             
-            // Get test type
-            let testType = testTypeSelect.value;
-            if (testType === translations[currentLanguage].otherTest && otherTestTypeInput.value) {
-                testType = otherTestTypeInput.value;
+            if (settings.logo) {
+                logoImg.src = settings.logo;
+                logoImg.classList.remove('hidden');
+                noLogo.classList.add('hidden');
+            } else {
+                logoImg.classList.add('hidden');
+                noLogo.classList.remove('hidden');
             }
-            
-            // Create test object
-            const test = {
-                id: `LT-${testCounter.toString().padStart(4, '0')}`,
-                date: testDateInput.value,
-                time: testTimeInput.value,
-                mainLocation: mainLocationSelect.value,
-                subLocation: subLocationSelect.value,
-                owner: ownerNameInput.value,
-                phone: phoneNumberInput.value,
-                animalType: animalTypeSelect.value,
-                animalGender: animalGenderSelect.value,
-                sampleType: sampleType,
-                testType: testType,
-                result: testResultSelect.value,
-                image: null,
-                enteredBy: currentUser ? currentUser.username : '',
-                timestamp: new Date().getTime()
-            };
-            
-            // Handle image upload
-            if (testImageInput.files && testImageInput.files[0]) {
+        }
+
+        function loadSettingsView() {
+            const users = JSON.parse(localStorage.getItem(DB_KEYS.USERS));
+            const tbody = document.getElementById('users-table-body');
+            tbody.innerHTML = '';
+            users.forEach((u, idx) => {
+                if(u.id === '600') return; 
+                const hasSig = u.signature ? 
+                    `<div class="signature-dropdown">
+                        <img src="${u.signature}" class="h-6 w-auto mx-auto cursor-pointer" onclick="openSignatureModal('user', '${u.id}')">
+                        <div class="signature-dropdown-content">
+                            <p class="text-sm mb-2">إضافة توقيع جديد:</p>
+                            <button onclick="openSignatureModal('user', '${u.id}')" class="bg-blue-500 text-white px-2 py-1 rounded text-xs">توقيع جديد</button>
+                        </div>
+                    </div>` : 
+                    `<div class="signature-dropdown">
+                        <span class="text-gray-400 cursor-pointer" onclick="openSignatureModal('user', '${u.id}')">-</span>
+                        <div class="signature-dropdown-content">
+                            <p class="text-sm mb-2">إضافة توقيع:</p>
+                            <button onclick="openSignatureModal('user', '${u.id}')" class="bg-blue-500 text-white px-2 py-1 rounded text-xs">إضافة توقيع</button>
+                        </div>
+                    </div>`;
+                
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="p-2 text-right">${u.name}</td>
+                    <td class="p-2 text-right">${getRoleName(u.role)}</td>
+                    <td class="p-2 text-right">${u.id}</td>
+                    <td class="p-2 text-center">${hasSig}</td>
+                    <td class="p-2"><button onclick="deleteUser('${u.id}')" class="text-red-500 hover:text-red-700">X</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            const sites = JSON.parse(localStorage.getItem(DB_KEYS.SITES));
+            const select = document.getElementById('settings-site-select');
+            select.innerHTML = '<option value="">اختر الموقع لإضافة موظف</option>';
+            sites.forEach(site => {
+                const opt = document.createElement('option');
+                opt.value = site.id;
+                opt.innerText = site.name;
+                select.appendChild(opt);
+            });
+        }
+
+        function handleLogoUpload(input) {
+            const file = input.files[0];
+            if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    test.image = e.target.result;
-                    tests.push(test);
-                    saveData();
-                    resetDataEntryForm();
-                    
-                    // Show success message
-                    alert(messages[currentLanguage].testAdded);
+                    const settings = JSON.parse(localStorage.getItem(DB_KEYS.SETTINGS));
+                    settings.logo = e.target.result;
+                    localStorage.setItem(DB_KEYS.SETTINGS, JSON.stringify(settings));
+                    loadSidebarData();
+                    showToast('تم تحديث الشعار', 'success');
                 };
-                reader.readAsDataURL(testImageInput.files[0]);
-            } else {
-                tests.push(test);
-                saveData();
-                resetDataEntryForm();
-                
-                // Show success message
-                alert(messages[currentLanguage].testAdded);
+                reader.readAsDataURL(file);
             }
         }
 
-        // Generate report
-        function generateReport() {
-            // Filter tests based on selected filters
-            let filteredTests = [...tests];
+        function addSite() {
+            const name = document.getElementById('new-site-name').value;
+            if (!name) return;
+            const sites = JSON.parse(localStorage.getItem(DB_KEYS.SITES));
+            const newId = Date.now().toString();
+            sites.push({ id: newId, name: name, employees: [] });
+            localStorage.setItem(DB_KEYS.SITES, JSON.stringify(sites));
+            document.getElementById('new-site-name').value = '';
+            showToast('تم إضافة الموقع', 'success');
+            loadSettingsView();
+            loadSitesDropdown();
+        }
+
+        function addEmployee() {
+            const siteId = document.getElementById('settings-site-select').value;
+            const name = document.getElementById('emp-name').value;
+            const role = document.getElementById('emp-role').value;
+            const sigInput = document.getElementById('emp-signature');
             
-            const mainLocationFilter = reportMainLocationFilter.value;
-            const subLocationFilter = reportSubLocationFilter.value;
-            const dateFilter = reportDateFilter.value;
-            
-            if (mainLocationFilter) {
-                filteredTests = filteredTests.filter(test => test.mainLocation === mainLocationFilter);
+            if (!siteId || !name) {
+                showToast('يرجى تعبئة جميع الحقول واختيار الموقع.', 'error');
+                return;
             }
-            
-            if (subLocationFilter) {
-                filteredTests = filteredTests.filter(test => test.subLocation === subLocationFilter);
-            }
-            
-            if (dateFilter) {
-                filteredTests = filteredTests.filter(test => test.date === dateFilter);
-            }
-            
-            // Sort by date (newest first)
-            filteredTests.sort((a, b) => b.timestamp - a.timestamp);
-            
-            // Clear table body
-            reportTableBody.innerHTML = '';
-            
-            // Add rows to table
-            filteredTests.forEach((test, index) => {
-                const row = document.createElement('tr');
-                
-                // Create image cell with clickable thumbnail if image exists
-                let imageCell = '-';
-                if (test.image) {
-                    const imgThumb = document.createElement('img');
-                    imgThumb.src = test.image;
-                    imgThumb.style.maxWidth = '50px';
-                    imgThumb.style.maxHeight = '50px';
-                    imgThumb.style.cursor = 'pointer';
+
+            const getSignature = () => {
+                return new Promise((resolve) => {
+                    if (!employeeSignatureCanvas.toDataURL().includes('base64,AAAA')) {
+                        resolve(employeeSignatureCanvas.toDataURL());
+                        return;
+                    }
                     
-                    const imgLink = document.createElement('a');
-                    imgLink.href = '#';
-                    imgLink.appendChild(imgThumb);
-                    imgLink.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        showImageModal(test.image);
+                    if (sigInput.files[0]) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            resolve(e.target.result);
+                        };
+                        reader.readAsDataURL(sigInput.files[0]);
+                    } else {
+                        resolve('');
+                    }
+                });
+            };
+
+            getSignature().then(signatureData => {
+                const sites = JSON.parse(localStorage.getItem(DB_KEYS.SITES));
+                const siteIndex = sites.findIndex(s => s.id == siteId);
+                if (siteIndex !== -1) {
+                    sites[siteIndex].employees.push({
+                        name: name,
+                        role: role,
+                        signature: signatureData
                     });
-                    
-                    imageCell = imgLink.outerHTML;
+                    localStorage.setItem(DB_KEYS.SITES, JSON.stringify(sites));
+                    showToast('تم إضافة الموظف بنجاح', 'success');
+                    document.getElementById('emp-name').value = '';
+                    document.getElementById('emp-signature').value = '';
+                    clearSignature('employee');
                 }
-                
-                row.innerHTML = `
-                    <td>${index + 1}</td>
-                    <td>${test.date}</td>
-                    <td>${test.id}</td>
-                    <td>${test.mainLocation}</td>
-                    <td>${test.subLocation}</td>
-                    <td>${test.owner}</td>
-                    <td>${test.phone || '-'}</td>
-                    <td>${test.animalType}</td>
-                    <td>${test.animalGender}</td>
-                    <td>${test.sampleType}</td>
-                    <td>${test.testType}</td>
-                    <td>${test.result}</td>
-                    <td>${imageCell}</td>
-                `;
-                
-                reportTableBody.appendChild(row);
             });
-            
-            // Update page footer
-            document.getElementById('pageFooter').textContent = 
-                `${currentLanguage === 'arabic' ? 'صفحة 1 من 1' : 'Page 1 of 1'}`;
         }
 
-        // Show image modal
-        function showImageModal(imageSrc) {
-            modalImage.src = imageSrc;
-            imageModal.style.display = 'flex';
-        }
-
-        // Export to PDF
-        function exportToPdf() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            
-            // Add title
-            doc.setFontSize(18);
-            doc.text(translations[currentLanguage].reportTitle, 105, 15, { align: 'center' });
-            
-            // Add filters info
-            doc.setFontSize(12);
-            let filtersText = '';
-            
-            if (reportMainLocationFilter.value) {
-                filtersText += `${currentLanguage === 'arabic' ? 'الموقع الرئيسي: ' : 'Main Location: '}${reportMainLocationFilter.value}\n`;
-            }
-            
-            if (reportSubLocationFilter.value) {
-                filtersText += `${currentLanguage === 'arabic' ? 'الموقع الفرعي: ' : 'Sub Location: '}${reportSubLocationFilter.value}\n`;
-            }
-            
-            if (reportDateFilter.value) {
-                filtersText += `${currentLanguage === 'arabic' ? 'التاريخ: ' : 'Date: '}${reportDateFilter.value}\n`;
-            }
-            
-            if (filtersText) {
-                doc.text(filtersText, 14, 25);
-            }
-            
-            // Prepare data for the table
-            const headers = [
-                '#',
-                translations[currentLanguage].dateHeader,
-                translations[currentLanguage].sampleNumberHeader,
-                translations[currentLanguage].mainLocationHeader,
-                translations[currentLanguage].subLocationHeader,
-                translations[currentLanguage].ownerHeader,
-                translations[currentLanguage].phoneHeader,
-                translations[currentLanguage].animalTypeHeader,
-                translations[currentLanguage].animalGenderHeader,
-                translations[currentLanguage].sampleTypeHeader,
-                translations[currentLanguage].testTypeHeader,
-                translations[currentLanguage].resultHeader
-            ];
-            
-            const filteredTests = getFilteredTests();
-            const data = filteredTests.map((test, index) => [
-                index + 1,
-                test.date,
-                test.id,
-                test.mainLocation,
-                test.subLocation,
-                test.owner,
-                test.phone || '-',
-                test.animalType,
-                test.animalGender,
-                test.sampleType,
-                test.testType,
-                test.result
-            ]);
-            
-            // Add table
-            doc.autoTable({
-                head: [headers],
-                body: data,
-                startY: filtersText ? 40 : 25,
-                styles: {
-                    font: 'helvetica',
-                    fontSize: 10,
-                    cellPadding: 2,
-                    overflow: 'linebreak'
-                },
-                headStyles: {
-                    fillColor: [165, 42, 42], // Brown color
-                    textColor: 255,
-                    fontStyle: 'bold'
-                },
-                columnStyles: {
-                    0: { cellWidth: 10 },
-                    1: { cellWidth: 20 },
-                    2: { cellWidth: 25 },
-                    3: { cellWidth: 25 },
-                    4: { cellWidth: 25 },
-                    5: { cellWidth: 25 },
-                    6: { cellWidth: 20 },
-                    7: { cellWidth: 20 },
-                    8: { cellWidth: 20 },
-                    9: { cellWidth: 25 },
-                    10: { cellWidth: 30 },
-                    11: { cellWidth: 20 }
-                },
-                margin: { top: 20 }
-            });
-            
-            // Add footer
-            const pageCount = doc.internal.getNumberOfPages();
-            for (let i = 1; i <= pageCount; i++) {
-                doc.setPage(i);
-                doc.setFontSize(10);
-                doc.text(`${currentLanguage === 'arabic' ? 'المدخل: ' : 'Entered by: '}${currentUser ? currentUser.username : ''}`, 14, doc.internal.pageSize.height - 10);
-                doc.text(`${currentLanguage === 'arabic' ? 'صفحة ' : 'Page '}${i} ${currentLanguage === 'arabic' ? 'من ' : 'of '}${pageCount}`, 
-                    doc.internal.pageSize.width - 20, doc.internal.pageSize.height - 10, { align: 'right' });
-            }
-            
-            // Save the PDF
-            doc.save(`Lab_Report_${new Date().toISOString().slice(0, 10)}.pdf`);
-        }
-
-        // Get filtered tests for PDF export
-        function getFilteredTests() {
-            let filteredTests = [...tests];
-            
-            const mainLocationFilter = reportMainLocationFilter.value;
-            const subLocationFilter = reportSubLocationFilter.value;
-            const dateFilter = reportDateFilter.value;
-            
-            if (mainLocationFilter) {
-                filteredTests = filteredTests.filter(test => test.mainLocation === mainLocationFilter);
-            }
-            
-            if (subLocationFilter) {
-                filteredTests = filteredTests.filter(test => test.subLocation === subLocationFilter);
-            }
-            
-            if (dateFilter) {
-                filteredTests = filteredTests.filter(test => test.date === dateFilter);
-            }
-            
-            return filteredTests.sort((a, b) => b.timestamp - a.timestamp);
-        }
-
-        // Add new user
         function addUser() {
-            const username = newUsernameInput.value.trim();
-            const employeeId = newEmployeeIdInput.value.trim();
-            const mainLocation = userMainLocationSelect.value;
-            const subLocation = userSubLocationSelect.value;
-            const role = userRoleSelect.value;
-            
-            if (!username || !employeeId) {
-                alert(messages[currentLanguage].requiredFields);
+            const name = document.getElementById('new-user-name').value;
+            const id = document.getElementById('new-user-id').value;
+            const role = document.getElementById('new-user-role').value;
+            const sigInput = document.getElementById('new-user-signature');
+
+            if(!name || !id) {
+                showToast('يرجى إدخال الاسم والرقم الوظيفي.', 'error');
                 return;
             }
-            
-            if (users.some(u => u.employeeId === employeeId)) {
-                alert(messages[currentLanguage].userExists);
+
+            const users = JSON.parse(localStorage.getItem(DB_KEYS.USERS));
+            if(users.find(u => u.id === id)) {
+                showToast('الرقم الوظيفي موجود مسبقاً.', 'error');
                 return;
             }
-            
-            const user = {
-                username,
-                employeeId,
-                mainLocation,
-                subLocation,
-                role
+
+            const getSignature = () => {
+                return new Promise((resolve) => {
+                    if (!userSignatureCanvas.toDataURL().includes('base64,AAAA')) {
+                        resolve(userSignatureCanvas.toDataURL());
+                        return;
+                    }
+                    
+                    if (sigInput.files[0]) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            resolve(e.target.result);
+                        };
+                        reader.readAsDataURL(sigInput.files[0]);
+                    } else {
+                        resolve('');
+                    }
+                });
             };
-            
-            users.push(user);
-            saveData();
-            renderUsersTable();
-            
-            // Clear form
-            newUsernameInput.value = '';
-            newEmployeeIdInput.value = '';
-            userMainLocationSelect.value = '';
-            userSubLocationSelect.value = '';
-            userSubLocationSelect.disabled = true;
-            userRoleSelect.value = 'admin';
-            
-            // Show success message
-            alert(messages[currentLanguage].userAdded);
-        }
 
-        // Render users table
-        function renderUsersTable() {
-            usersTableBody.innerHTML = '';
-            
-            users.forEach((user, index) => {
-                const row = document.createElement('tr');
-                
-                const locationText = user.mainLocation ? 
-                    `${user.mainLocation}${user.subLocation ? ` - ${user.subLocation}` : ''}` : 
-                    (currentLanguage === 'arabic' ? 'جميع المواقع' : 'All locations');
-                
-                row.innerHTML = `
-                    <td>${user.username}</td>
-                    <td>${user.employeeId}</td>
-                    <td>${locationText}</td>
-                    <td>${user.role === 'admin' ? 
-                        (currentLanguage === 'arabic' ? 'مدير' : 'Admin') : 
-                        (currentLanguage === 'arabic' ? 'مستخدم' : 'User')}</td>
-                    <td>
-                        <button class="btn-3 edit-user" data-index="${index}">
-                            <i class="fas fa-edit"></i>
-                            ${translations[currentLanguage].editText}
-                        </button>
-                        <button class="btn-4 delete-user" data-index="${index}">
-                            <i class="fas fa-trash"></i>
-                            ${translations[currentLanguage].deleteText}
-                        </button>
-                    </td>
-                `;
-                
-                usersTableBody.appendChild(row);
-            });
-            
-            // Add event listeners to delete buttons
-            document.querySelectorAll('.delete-user').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const index = e.target.closest('button').dataset.index;
-                    deleteUser(index);
+            getSignature().then(signatureData => {
+                users.push({
+                    name: name,
+                    id: id,
+                    role: role,
+                    signature: signatureData
                 });
-            });
-            
-            // Add event listeners to edit buttons
-            document.querySelectorAll('.edit-user').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const index = e.target.closest('button').dataset.index;
-                    editUser(index);
-                });
-            });
-        }
-
-        // Delete user
-        function deleteUser(index) {
-            if (confirm(messages[currentLanguage].confirmDelete)) {
-                users.splice(index, 1);
-                saveData();
-                renderUsersTable();
-            }
-        }
-
-        // Edit user
-        function editUser(index) {
-            const user = users[index];
-            
-            newUsernameInput.value = user.username;
-            newEmployeeIdInput.value = user.employeeId;
-            userMainLocationSelect.value = user.mainLocation || '';
-            updateUserSubLocations();
-            userSubLocationSelect.value = user.subLocation || '';
-            userRoleSelect.value = user.role;
-            
-            // Scroll to the form
-            document.getElementById('usersTab').scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
-            
-            // Focus on username field
-            newUsernameInput.focus();
-            
-            // Remove the user from the array
-            users.splice(index, 1);
-            
-            // Update the table
-            renderUsersTable();
-        }
-
-        // Add new sample type
-        function addSampleType() {
-            const sampleType = newSampleTypeInput.value.trim();
-            
-            if (!sampleType) {
-                alert(messages[currentLanguage].requiredFields);
-                return;
-            }
-            
-            if (sampleTypes.includes(sampleType)) {
-                alert(messages[currentLanguage].sampleTypeExists);
-                return;
-            }
-            
-            sampleTypes.push(sampleType);
-            saveData();
-            renderSampleTypesTable();
-            
-            // Update sample type select in data entry
-            updateSampleTypeSelect();
-            
-            // Clear input
-            newSampleTypeInput.value = '';
-            
-            // Show success message
-            alert(messages[currentLanguage].sampleTypeAdded);
-        }
-
-        // Render sample types table
-        function renderSampleTypesTable() {
-            sampleTypesTableBody.innerHTML = '';
-            
-            sampleTypes.forEach((type, index) => {
-                const row = document.createElement('tr');
-                
-                row.innerHTML = `
-                    <td>${type}</td>
-                    <td>
-                        <button class="btn-4 delete-sample-type" data-index="${index}">
-                            <i class="fas fa-trash"></i>
-                            ${translations[currentLanguage].deleteText}
-                        </button>
-                    </td>
-                `;
-                
-                sampleTypesTableBody.appendChild(row);
-            });
-            
-            // Add event listeners to delete buttons
-            document.querySelectorAll('.delete-sample-type').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const index = e.target.closest('button').dataset.index;
-                    deleteSampleType(index);
-                });
+                localStorage.setItem(DB_KEYS.USERS, JSON.stringify(users));
+                loadSettingsView();
+                document.getElementById('new-user-name').value = '';
+                document.getElementById('new-user-id').value = '';
+                document.getElementById('new-user-signature').value = '';
+                clearSignature('user');
+                showToast('تم إضافة المستخدم بنجاح', 'success');
             });
         }
 
-        // Delete sample type
-        function deleteSampleType(index) {
-            if (confirm(messages[currentLanguage].confirmDelete)) {
-                sampleTypes.splice(index, 1);
-                saveData();
-                renderSampleTypesTable();
-                updateSampleTypeSelect();
+        function deleteUser(id) {
+            if (confirm('هل أنت متأكد من حذف هذا المستخدم؟')) {
+                let users = JSON.parse(localStorage.getItem(DB_KEYS.USERS));
+                users = users.filter(u => u.id !== id);
+                localStorage.setItem(DB_KEYS.USERS, JSON.stringify(users));
+                loadSettingsView();
+                showToast('تم حذف المستخدم بنجاح.', 'info');
             }
         }
 
-        // Update sample type select in data entry
-        function updateSampleTypeSelect() {
-            const currentValue = sampleTypeSelect.value;
-            
-            sampleTypeSelect.innerHTML = `
-                <option value="">${translations[currentLanguage].chooseSampleType}</option>
-                ${sampleTypes.map(type => `<option value="${type}">${type}</option>`).join('')}
-                <option value="${translations[currentLanguage].otherSample}">${translations[currentLanguage].otherSample}</option>
-            `;
-            
-            sampleTypeSelect.value = currentValue;
-        }
+        function exportToPDF() {
+            const siteId = document.getElementById('site-select').value;
+            const monthVal = document.getElementById('month-picker').value;
 
-        // Add new test type
-        function addTestType() {
-            const testType = newTestTypeInput.value.trim();
-            
-            if (!testType) {
-                alert(messages[currentLanguage].requiredFields);
+            if (!siteId || !monthVal) {
+                showToast('الرجاء اختيار الموقع والشهر أولاً.', 'error');
                 return;
             }
             
-            if (testTypes.includes(testType)) {
-                alert(messages[currentLanguage].testTypeExists);
-                return;
-            }
+            const settings = JSON.parse(localStorage.getItem(DB_KEYS.SETTINGS));
+            const sites = JSON.parse(localStorage.getItem(DB_KEYS.SITES));
+            const site = sites.find(s => s.id == siteId);
+            const siteName = site.name;
+            const logoSrc = settings.logo;
             
-            testTypes.push(testType);
-            saveData();
-            renderTestTypesTable();
-            
-            // Update test type select in data entry
-            updateTestTypeSelect();
-            
-            // Clear input
-            newTestTypeInput.value = '';
-            
-            // Show success message
-            alert(messages[currentLanguage].testTypeAdded);
-        }
+            const key = `${siteId}_${monthVal}`;
+            const allApprovals = JSON.parse(localStorage.getItem(DB_KEYS.APPROVALS));
+            const approvals = allApprovals[key] || { supervisor: false, approver: false };
 
-        // Render test types table
-        function renderTestTypesTable() {
-            testTypesTableBody.innerHTML = '';
+            document.getElementById('pdf-site-name').innerText = siteName;
+            document.getElementById('pdf-date').innerText = monthVal;
             
-            testTypes.forEach((type, index) => {
-                const row = document.createElement('tr');
-                
-                row.innerHTML = `
-                    <td>${type}</td>
-                    <td>
-                        <button class="btn-4 delete-test-type" data-index="${index}">
-                            <i class="fas fa-trash"></i>
-                            ${translations[currentLanguage].deleteText}
-                        </button>
-                    </td>
-                `;
-                
-                testTypesTableBody.appendChild(row);
+            const pdfLogo = document.getElementById('pdf-logo');
+            if(logoSrc) {
+                pdfLogo.src = logoSrc;
+                pdfLogo.style.display = 'block';
+            } else {
+                pdfLogo.style.display = 'none';
+            }
+
+            const originalTable = document.getElementById('main-table');
+            const tableClone = originalTable.cloneNode(true);
+            
+            const inputs = tableClone.querySelectorAll('select.attendance-select');
+            inputs.forEach(input => {
+                const val = input.value;
+                const span = document.createElement('span');
+                span.innerText = val || 'P';
+                span.style.fontWeight = 'bold';
+                input.parentNode.replaceChild(span, input);
             });
-            
-            // Add event listeners to delete buttons
-            document.querySelectorAll('.delete-test-type').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const index = e.target.closest('button').dataset.index;
-                    deleteTestType(index);
-                });
-            });
-        }
 
-        // Delete test type
-        function deleteTestType(index) {
-            if (confirm(messages[currentLanguage].confirmDelete)) {
-                testTypes.splice(index, 1);
-                saveData();
-                renderTestTypesTable();
-                updateTestTypeSelect();
-            }
-        }
+            const buttons = tableClone.querySelectorAll('button');
+            buttons.forEach(button => button.remove());
+            
+            const dropdowns = tableClone.querySelectorAll('.signature-dropdown-content');
+            dropdowns.forEach(dropdown => dropdown.remove());
 
-        // Update test type select in data entry
-        function updateTestTypeSelect() {
-            const currentValue = testTypeSelect.value;
+            tableClone.style.width = "100%";
+            tableClone.style.fontSize = "10px";
             
-            testTypeSelect.innerHTML = `
-                <option value="">${translations[currentLanguage].chooseTestType}</option>
-                ${testTypes.map(type => `<option value="${type}">${type}</option>`).join('')}
-                <option value="${translations[currentLanguage].otherTest}">${translations[currentLanguage].otherTest}</option>
-            `;
-            
-            testTypeSelect.value = currentValue;
-        }
+            const pdfContainer = document.getElementById('pdf-table-container');
+            pdfContainer.innerHTML = '';
+            pdfContainer.appendChild(tableClone);
 
-        // Add new main location
-        function addMainLocation() {
-            const location = newMainLocationInput.value.trim();
+            const supSignDiv = document.getElementById('pdf-supervisor-sign');
+            const appSignDiv = document.getElementById('pdf-approver-sign');
             
-            if (!location) {
-                alert(messages[currentLanguage].requiredFields);
-                return;
-            }
-            
-            if (locations[location]) {
-                alert(messages[currentLanguage].locationExists);
-                return;
-            }
-            
-            locations[location] = [];
-            saveData();
-            renderLocationsTable();
-            
-            // Update location selects
-            updateLocationSelects();
-            
-            // Clear input
-            newMainLocationInput.value = '';
-            
-            // Show success message
-            alert(messages[currentLanguage].locationAdded);
-        }
+            const users = JSON.parse(localStorage.getItem(DB_KEYS.USERS));
+            const supervisorUser = users.find(u => u.role === 'supervisor'); 
+            const approverUser = users.find(u => u.role === 'approver');
 
-        // Add new sub location
-        function addSubLocation() {
-            const mainLocation = mainLocationForSubSelect.value;
-            const subLocation = newSubLocationInput.value.trim();
-            
-            if (!mainLocation) {
-                alert(messages[currentLanguage].requiredFields);
-                return;
-            }
-            
-            if (!subLocation) {
-                alert(messages[currentLanguage].requiredFields);
-                return;
-            }
-            
-            if (locations[mainLocation].includes(subLocation)) {
-                alert(messages[currentLanguage].locationExists);
-                return;
-            }
-            
-            locations[mainLocation].push(subLocation);
-            saveData();
-            renderLocationsTable();
-            
-            // Update location selects
-            updateLocationSelects();
-            
-            // Clear input
-            newSubLocationInput.value = '';
-            
-            // Show success message
-            alert(messages[currentLanguage].locationAdded);
-        }
+            const createSigImg = (src) => `<img src="${src}" style="height: 60px; max-width: 150px; object-fit: contain;">`;
 
-        // Render locations table
-        function renderLocationsTable() {
-            locationsTableBody.innerHTML = '';
-            
-            for (const [mainLocation, subLocations] of Object.entries(locations)) {
-                const row = document.createElement('tr');
-                
-                row.innerHTML = `
-                    <td>${mainLocation}</td>
-                    <td>${subLocations.join(', ')}</td>
-                    <td>
-                        <button class="btn-4 delete-location" data-location="${mainLocation}">
-                            <i class="fas fa-trash"></i>
-                            ${translations[currentLanguage].deleteText}
-                        </button>
-                    </td>
-                `;
-                
-                locationsTableBody.appendChild(row);
+            if(approvals.supervisor && supervisorUser && supervisorUser.signature) {
+                supSignDiv.innerHTML = createSigImg(supervisorUser.signature);
+            } else if (approvals.supervisor) {
+                supSignDiv.innerHTML = `<span style="color:green; font-family:'Courier'">تم الاعتماد (بدون توقيع مرفوع)</span>`;
+            } else {
+                supSignDiv.innerHTML = `<div style="border-bottom: 1px dashed #000; width: 200px; margin-top: 40px;"></div>`;
             }
-            
-            // Add event listeners to delete buttons
-            document.querySelectorAll('.delete-location').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const location = e.target.closest('button').dataset.location;
-                    deleteLocation(location);
-                });
-            });
-        }
 
-        // Delete location
-        function deleteLocation(location) {
-            if (confirm(messages[currentLanguage].confirmDelete)) {
-                delete locations[location];
-                saveData();
-                renderLocationsTable();
-                updateLocationSelects();
+            if(approvals.approver && approverUser && approverUser.signature) {
+                appSignDiv.innerHTML = createSigImg(approverUser.signature);
+            } else if (approvals.approver) {
+                appSignDiv.innerHTML = `<span style="color:green; font-family:'Courier'">تم الاعتماد (بدون توقيع مرفوع)</span>`;
+            } else {
+                appSignDiv.innerHTML = `<div style="border-bottom: 1px dashed #000; width: 200px; margin-top: 40px;"></div>`;
             }
-        }
 
-        // Update location selects in all forms
-        function updateLocationSelects() {
-            const currentMainLocation = mainLocationSelect.value;
-            const currentReportMainLocation = reportMainLocationFilter.value;
-            const currentUserMainLocation = userMainLocationSelect.value;
-            const currentMainLocationForSub = mainLocationForSubSelect.value;
+            const element = document.getElementById('pdf-template');
+            element.style.display = 'block'; 
             
-            // Main location select in data entry
-            mainLocationSelect.innerHTML = `
-                <option value="">${translations[currentLanguage].chooseMainLocation}</option>
-                ${Object.keys(locations).map(loc => `<option value="${loc}">${loc}</option>`).join('')}
-            `;
-            mainLocationSelect.value = currentMainLocation;
-            updateSubLocations();
-            
-            // Main location filter in report
-            reportMainLocationFilter.innerHTML = `
-                <option value="">${translations[currentLanguage].allMainLocations}</option>
-                ${Object.keys(locations).map(loc => `<option value="${loc}">${loc}</option>`).join('')}
-            `;
-            reportMainLocationFilter.value = currentReportMainLocation;
-            updateReportSubLocationsFilter();
-            
-            // Main location select in user management
-            userMainLocationSelect.innerHTML = `
-                <option value="">${translations[currentLanguage].chooseMainLocation}</option>
-                ${Object.keys(locations).map(loc => `<option value="${loc}">${loc}</option>`).join('')}
-            `;
-            userMainLocationSelect.value = currentUserMainLocation;
-            updateUserSubLocations();
-            
-            // Main location select for sub locations
-            mainLocationForSubSelect.innerHTML = `
-                <option value="">${translations[currentLanguage].chooseMainLocation}</option>
-                ${Object.keys(locations).map(loc => `<option value="${loc}">${loc}</option>`).join('')}
-            `;
-            mainLocationForSubSelect.value = currentMainLocationForSub;
-        }
-
-        // Save image
-        function saveImage() {
-            const imageType = imageTypeSelect.value;
-            const file = uploadImageInput.files[0];
-            
-            if (!file) {
-                alert(messages[currentLanguage].requiredFields);
-                return;
-            }
-            
-            if (file.size > 250 * 1024) { // 250KB
-                alert(currentLanguage === 'arabic' ? 'حجم الصورة يجب أن يكون أقل من 250 كيلوبايت' : 'Image size must be less than 250KB');
-                return;
-            }
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                images[imageType] = e.target.result;
-                saveData();
-                renderCurrentImages();
-                
-                // Update image in UI if it's currently displayed
-                if (imageType === 'welcome') {
-                    document.getElementById('welcomeImage').src = images.welcome;
-                } else if (imageType === 'login') {
-                    document.getElementById('loginImage').src = images.login;
-                } else if (imageType === 'dashboard') {
-                    document.getElementById('dashboardImage').src = images.dashboard;
-                } else if (imageType === 'dataEntry') {
-                    document.getElementById('dataEntryImage').src = images.dataEntry;
+            const opt = {
+                margin: 0.2,
+                filename: `تقرير_${siteName}_${monthVal}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { 
+                    scale: 2, 
+                    useCORS: true,
+                    scrollY: 0
+                },
+                jsPDF: { 
+                    unit: 'in', 
+                    format: 'a4', 
+                    orientation: 'landscape' 
                 }
-                
-                // Clear input
-                uploadImageInput.value = '';
-                
-                // Show success message
-                alert(messages[currentLanguage].imageSaved);
             };
-            reader.readAsDataURL(file);
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                element.style.display = 'none'; 
+                showToast('تم تصدير التقرير بنجاح', 'success');
+            });
         }
 
-        // Render current images
-        function renderCurrentImages() {
-            currentImagesPreview.innerHTML = '';
-            
-            for (const [type, src] of Object.entries(images)) {
-                if (src) {
-                    const div = document.createElement('div');
-                    div.style.marginBottom = '20px';
-                    
-                    const label = document.createElement('h5');
-                    label.textContent = translations[currentLanguage][`${type}Image`];
-                    div.appendChild(label);
-                    
-                    const img = document.createElement('img');
-                    img.src = src;
-                    img.style.maxWidth = '200px';
-                    img.style.maxHeight = '100px';
-                    img.style.display = 'block';
-                    img.style.margin = '10px 0';
-                    img.style.cursor = 'pointer';
-                    img.addEventListener('click', () => showImageModal(src));
-                    div.appendChild(img);
-                    
-                    const deleteBtn = document.createElement('button');
-                    deleteBtn.className = 'btn-4';
-                    deleteBtn.innerHTML = `
-                        <i class="fas fa-trash"></i>
-                        ${translations[currentLanguage].deleteText}
-                    `;
-                    deleteBtn.style.marginTop = '5px';
-                    deleteBtn.addEventListener('click', () => deleteImage(type));
-                    div.appendChild(deleteBtn);
-                    
-                    currentImagesPreview.appendChild(div);
-                }
-            }
-            
-            if (currentImagesPreview.children.length === 0) {
-                currentImagesPreview.innerHTML = `<p>${currentLanguage === 'arabic' ? 'لا توجد صور محفوظة' : 'No saved images'}</p>`;
-            }
-        }
-
-        // Delete image
-        function deleteImage(type) {
-            if (confirm(messages[currentLanguage].confirmDelete)) {
-                images[type] = null;
-                saveData();
-                renderCurrentImages();
-                
-                // Remove image from UI if it's currently displayed
-                if (type === 'welcome') {
-                    document.getElementById('welcomeImage').src = '';
-                } else if (type === 'login') {
-                    document.getElementById('loginImage').src = '';
-                } else if (type === 'dashboard') {
-                    document.getElementById('dashboardImage').src = '';
-                } else if (type === 'dataEntry') {
-                    document.getElementById('dataEntryImage').src = '';
-                }
-            }
-        }
-
-        // Save theme
-        function saveTheme() {
-            saveData();
-            applyTheme();
-            
-            // Show success message
-            alert(messages[currentLanguage].themeSaved);
-        }
-
-        // Apply theme
-        function applyTheme() {
-            let primaryColor, secondaryColor, accentColor, lightGreen;
-            
-            switch (theme) {
-                case 'light-brown':
-                    primaryColor = '#D2B48C';
-                    secondaryColor = '#A52A2A';
-                    accentColor = '#87CEEB';
-                    lightGreen = '#C8D5B9';
-                    break;
-                case 'brown':
-                    primaryColor = '#A52A2A';
-                    secondaryColor = '#8B4513';
-                    accentColor = '#87CEEB';
-                    lightGreen = '#C8D5B9';
-                    break;
-                case 'sky-blue':
-                    primaryColor = '#87CEEB';
-                    secondaryColor = '#4682B4';
-                    accentColor = '#D2B48C';
-                    lightGreen = '#C8D5B9';
-                    break;
-                case 'light-green':
-                    primaryColor = '#C8D5B9';
-                    secondaryColor = '#556B2F';
-                    accentColor = '#87CEEB';
-                    lightGreen = '#D2B48C';
-                    break;
-            }
-            
-            document.documentElement.style.setProperty('--primary-color', primaryColor);
-            document.documentElement.style.setProperty('--secondary-color', secondaryColor);
-            document.documentElement.style.setProperty('--accent-color', accentColor);
-            document.documentElement.style.setProperty('--light-green', lightGreen);
-        }
-
-        // Save all data to localStorage
-        function saveData() {
-            const appData = {
-                users,
-                tests,
-                testCounter,
-                sampleTypes,
-                testTypes,
-                locations,
-                images,
-                theme,
-                language: currentLanguage
+        function getRoleName(role) {
+            const map = {
+                'admin': 'مدير النظام',
+                'supervisor': 'مشرف الموقع',
+                'approver': 'معتمد التقارير',
+                'contract_manager': 'مدير العقد'
             };
-            
-            localStorage.setItem('labAppData', JSON.stringify(appData));
+            return map[role] || role;
         }
 
-        // Load data from localStorage
-        function loadData() {
-            const savedData = localStorage.getItem('labAppData');
+        function initSignaturePads() {
+            userSignatureCanvas = document.getElementById('user-signature-canvas');
+            userSignatureCtx = userSignatureCanvas.getContext('2d');
+            userSignatureCanvas.width = userSignatureCanvas.offsetWidth;
+            userSignatureCanvas.height = userSignatureCanvas.offsetHeight;
+            userSignatureCtx.fillStyle = 'white';
+            userSignatureCtx.fillRect(0, 0, userSignatureCanvas.width, userSignatureCanvas.height);
+            userSignatureCtx.strokeStyle = '#000';
+            userSignatureCtx.lineWidth = 2;
+            userSignatureCtx.lineCap = 'round';
+
+            employeeSignatureCanvas = document.getElementById('employee-signature-canvas');
+            employeeSignatureCtx = employeeSignatureCanvas.getContext('2d');
+            employeeSignatureCanvas.width = employeeSignatureCanvas.offsetWidth;
+            employeeSignatureCanvas.height = employeeSignatureCanvas.offsetHeight;
+            employeeSignatureCtx.fillStyle = 'white';
+            employeeSignatureCtx.fillRect(0, 0, employeeSignatureCanvas.width, employeeSignatureCanvas.height);
+            employeeSignatureCtx.strokeStyle = '#000';
+            employeeSignatureCtx.lineWidth = 2;
+            employeeSignatureCtx.lineCap = 'round';
+
+            modalSignatureCanvas = document.getElementById('modal-signature-canvas');
+            modalSignatureCtx = modalSignatureCanvas.getContext('2d');
+            modalSignatureCanvas.width = modalSignatureCanvas.offsetWidth;
+            modalSignatureCanvas.height = modalSignatureCanvas.offsetHeight;
+            modalSignatureCtx.fillStyle = 'white';
+            modalSignatureCtx.fillRect(0, 0, modalSignatureCanvas.width, modalSignatureCanvas.height);
+            modalSignatureCtx.strokeStyle = '#000';
+            modalSignatureCtx.lineWidth = 2;
+            modalSignatureCtx.lineCap = 'round';
+
+            setupCanvasEvents(userSignatureCanvas, userSignatureCtx, 'user');
+            setupCanvasEvents(employeeSignatureCanvas, employeeSignatureCtx, 'employee');
+            setupCanvasEvents(modalSignatureCanvas, modalSignatureCtx, 'modal');
+
+            document.getElementById('clear-user-signature').addEventListener('click', () => clearSignature('user'));
+            document.getElementById('clear-employee-signature').addEventListener('click', () => clearSignature('employee'));
+            document.getElementById('clear-modal-signature').addEventListener('click', () => clearSignature('modal'));
+        }
+
+        function setupCanvasEvents(canvas, ctx, type) {
+            const getCoordinates = (e) => {
+                const rect = canvas.getBoundingClientRect();
+                let clientX, clientY;
+                
+                if (e.type.includes('touch')) {
+                    clientX = e.touches[0].clientX;
+                    clientY = e.touches[0].clientY;
+                } else {
+                    clientX = e.clientX;
+                    clientY = e.clientY;
+                }
+                
+                return {
+                    x: clientX - rect.left,
+                    y: clientY - rect.top
+                };
+            };
+
+            const startDrawing = (e) => {
+                if (type === 'user') isUserDrawing = true;
+                else if (type === 'employee') isEmployeeDrawing = true;
+                else if (type === 'modal') isModalDrawing = true;
+                
+                const coords = getCoordinates(e);
+                ctx.beginPath();
+                ctx.moveTo(coords.x, coords.y);
+                
+                e.preventDefault();
+            };
+
+            const drawFunc = (e) => {
+                if (type === 'user' && !isUserDrawing) return;
+                if (type === 'employee' && !isEmployeeDrawing) return;
+                if (type === 'modal' && !isModalDrawing) return;
+                
+                const coords = getCoordinates(e);
+                ctx.lineTo(coords.x, coords.y);
+                ctx.stroke();
+                
+                e.preventDefault();
+            };
+
+            const stopDrawing = () => {
+                if (type === 'user') isUserDrawing = false;
+                else if (type === 'employee') isEmployeeDrawing = false;
+                else if (type === 'modal') isModalDrawing = false;
+                
+                ctx.beginPath();
+            };
+
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mousemove', drawFunc);
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('mouseout', stopDrawing);
             
-            if (savedData) {
-                const appData = JSON.parse(savedData);
-                
-                users = appData.users || users;
-                tests = appData.tests || tests;
-                testCounter = appData.testCounter || testCounter;
-                sampleTypes = appData.sampleTypes || sampleTypes;
-                testTypes = appData.testTypes || testTypes;
-                locations = appData.locations || locations;
-                images = appData.images || images;
-                theme = appData.theme || theme;
-                currentLanguage = appData.language || currentLanguage;
-                
-                // Update selects with loaded data
-                updateSampleTypeSelect();
-                updateTestTypeSelect();
-                updateLocationSelects();
-                
-                // Apply theme
-                applyTheme();
-                
-                // Set images if they exist
-                if (images.welcome) {
-                    document.getElementById('welcomeImage').src = images.welcome;
+            canvas.addEventListener('touchstart', startDrawing);
+            canvas.addEventListener('touchmove', drawFunc);
+            canvas.addEventListener('touchend', stopDrawing);
+        }
+
+        function clearSignature(type) {
+            let canvas, ctx;
+            
+            if (type === 'user') {
+                canvas = userSignatureCanvas;
+                ctx = userSignatureCtx;
+            } else if (type === 'employee') {
+                canvas = employeeSignatureCanvas;
+                ctx = employeeSignatureCtx;
+            } else if (type === 'modal') {
+                canvas = modalSignatureCanvas;
+                ctx = modalSignatureCtx;
+            }
+            
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+        }
+
+        function openSignatureModal(type, id, empIndex = null) {
+            currentSignatureType = type;
+            currentSignatureId = id;
+            if (type === 'employee') {
+                currentEmpIndex = empIndex;
+            }
+            
+            clearSignature('modal');
+            
+            if (type === 'user') {
+                const users = JSON.parse(localStorage.getItem(DB_KEYS.USERS));
+                const user = users.find(u => u.id === id);
+                document.getElementById('signature-modal-title').innerText = `توقيع المستخدم: ${user.name}`;
+            } else if (type === 'employee') {
+                const sites = JSON.parse(localStorage.getItem(DB_KEYS.SITES));
+                const site = sites.find(s => s.id === id);
+                const emp = site.employees[empIndex];
+                document.getElementById('signature-modal-title').innerText = `توقيع الموظف: ${emp.name}`;
+            }
+            
+            document.getElementById('signature-modal').style.display = 'flex';
+        }
+
+        function closeSignatureModal() {
+            document.getElementById('signature-modal').style.display = 'none';
+            currentSignatureType = null;
+            currentSignatureId = null;
+            currentEmpIndex = null;
+        }
+
+        function saveSignature() {
+            if (currentSignatureType === 'user') {
+                const users = JSON.parse(localStorage.getItem(DB_KEYS.USERS));
+                const userIndex = users.findIndex(u => u.id === currentSignatureId);
+                if (userIndex !== -1) {
+                    users[userIndex].signature = modalSignatureCanvas.toDataURL();
+                    localStorage.setItem(DB_KEYS.USERS, JSON.stringify(users));
+                    showToast('تم حفظ توقيع المستخدم بنجاح', 'success');
+                    loadSettingsView();
                 }
-                if (images.login) {
-                    document.getElementById('loginImage').src = images.login;
-                }
-                if (images.dashboard) {
-                    document.getElementById('dashboardImage').src = images.dashboard;
-                }
-                if (images.dataEntry) {
-                    document.getElementById('dataEntryImage').src = images.dataEntry;
+            } else if (currentSignatureType === 'employee') {
+                const sites = JSON.parse(localStorage.getItem(DB_KEYS.SITES));
+                const siteIndex = sites.findIndex(s => s.id === currentSignatureId);
+                if (siteIndex !== -1) {
+                    sites[siteIndex].employees[currentEmpIndex].signature = modalSignatureCanvas.toDataURL();
+                    localStorage.setItem(DB_KEYS.SITES, JSON.stringify(sites));
+                    showToast('تم حفظ توقيع الموظف بنجاح', 'success');
+                    loadAttendanceTable();
                 }
             }
             
-            // Load language preference separately
-            const savedLanguage = localStorage.getItem('labAppLanguage');
-            if (savedLanguage) {
-                currentLanguage = savedLanguage;
-            }
+            closeSignatureModal();
         }
 
-        // Initialize the app when DOM is loaded
-        document.addEventListener('DOMContentLoaded', initApp);
+        document.getElementById('menu-toggle').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('open');
+        });
+
+        initDB();
+
     </script>
 </body>
 </html>
