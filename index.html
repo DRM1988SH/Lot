@@ -397,6 +397,14 @@
                     <p class="text-xs text-gray-500">يفضل صورة مربعة 200x200</p>
                 </div>
 
+                <div class="bg-white p-4 rounded shadow mb-6">
+                    <h3 class="font-bold text-lg mb-3 text-red-700">إعادة ضبط النظام</h3>
+                    <p class="text-sm text-gray-600 mb-3">هذا الإجراء سيمسح جميع البيانات ويعيد النظام إلى ضبط المصنع.</p>
+                    <button onclick="resetSystem()" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition">
+                        <i class="fas fa-trash-alt"></i> إعادة ضبط النظام
+                    </button>
+                </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="bg-white p-4 rounded shadow order-2 md:order-1">
                         <h3 class="font-bold text-lg mb-3 text-green-700">إضافة مستخدم وتوقيعه</h3>
@@ -539,6 +547,34 @@
         let currentSignatureId = null;
         let currentEmpIndex = null;
         
+        // حفظ حالة المستخدم في localStorage
+        function saveUserState() {
+            if (currentUser) {
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                localStorage.setItem('currentScreen', document.querySelector('main > div:not(.hidden)').id.replace('screen-', ''));
+            }
+        }
+
+        // استعادة حالة المستخدم من localStorage
+        function restoreUserState() {
+            const savedUser = localStorage.getItem('currentUser');
+            const savedScreen = localStorage.getItem('currentScreen');
+            
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                document.getElementById('login-overlay').style.display = 'none';
+                document.getElementById('user-display').innerText = `${currentUser.name} (${getRoleName(currentUser.role)})`;
+                loadSidebarData();
+                setupUIForRole();
+                
+                if (savedScreen) {
+                    showScreen(savedScreen);
+                } else {
+                    showScreen('attendance');
+                }
+            }
+        }
+
         function initDB() {
             if (!localStorage.getItem(DB_KEYS.USERS)) {
                 const defaultUsers = [
@@ -595,6 +631,7 @@
 
             if (user) {
                 currentUser = user;
+                saveUserState();
                 document.getElementById('login-overlay').style.display = 'none';
                 document.getElementById('user-display').innerText = `${user.name} (${getRoleName(user.role)})`;
                 loadSidebarData();
@@ -607,6 +644,8 @@
 
         function logout() {
             currentUser = null;
+            localStorage.removeItem('currentUser');
+            localStorage.removeItem('currentScreen');
             document.getElementById('login-id').value = '';
             document.getElementById('login-overlay').style.display = 'flex';
         }
@@ -631,6 +670,11 @@
             document.getElementById('screen-attendance').classList.add('hidden');
             document.getElementById('screen-settings').classList.add('hidden');
             document.getElementById(`screen-${screenId}`).classList.remove('hidden');
+            
+            // حفظ الشاشة الحالية
+            if (currentUser) {
+                localStorage.setItem('currentScreen', screenId);
+            }
             
             if(window.innerWidth < 768) {
                 document.getElementById('sidebar').classList.remove('open');
@@ -1084,6 +1128,27 @@
             }
         }
 
+        function resetSystem() {
+            if (confirm('هل أنت متأكد من إعادة ضبط النظام؟ هذا الإجراء سيمسح جميع البيانات ولا يمكن التراجع عنه.')) {
+                // مسح جميع البيانات
+                localStorage.removeItem(DB_KEYS.USERS);
+                localStorage.removeItem(DB_KEYS.SITES);
+                localStorage.removeItem(DB_KEYS.ATTENDANCE);
+                localStorage.removeItem(DB_KEYS.SETTINGS);
+                localStorage.removeItem(DB_KEYS.APPROVALS);
+                localStorage.removeItem('currentUser');
+                localStorage.removeItem('currentScreen');
+                
+                // إعادة تهيئة النظام
+                initDB();
+                
+                // إعادة تحميل الصفحة
+                location.reload();
+                
+                showToast('تم إعادة ضبط النظام بنجاح', 'success');
+            }
+        }
+
         function isCanvasNotEmpty(canvas) {
             const ctx = canvas.getContext('2d');
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -1382,6 +1447,8 @@
                 const coords = getCoordinates(e);
                 ctx.beginPath();
                 ctx.moveTo(coords.x, coords.y);
+                ctx.lineTo(coords.x, coords.y);
+                ctx.stroke();
                 
                 e.preventDefault();
             };
@@ -1402,6 +1469,8 @@
                 if (type === 'user') isUserDrawing = false;
                 else if (type === 'employee') isEmployeeDrawing = false;
                 else if (type === 'modal') isModalDrawing = false;
+                
+                ctx.beginPath();
             };
 
             canvas.addEventListener('mousedown', startDrawing);
@@ -1409,8 +1478,8 @@
             canvas.addEventListener('mouseup', stopDrawing);
             canvas.addEventListener('mouseout', stopDrawing);
             
-            canvas.addEventListener('touchstart', startDrawing);
-            canvas.addEventListener('touchmove', drawFunc);
+            canvas.addEventListener('touchstart', startDrawing, { passive: false });
+            canvas.addEventListener('touchmove', drawFunc, { passive: false });
             canvas.addEventListener('touchend', stopDrawing);
         }
 
@@ -1493,7 +1562,12 @@
             document.getElementById('sidebar').classList.toggle('open');
         });
 
-        initDB();
+        // تهيئة النظام عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            initDB();
+            restoreUserState();
+            initSignaturePads();
+        });
 
     </script>
 </body>
