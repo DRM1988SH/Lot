@@ -261,6 +261,30 @@
             padding: 8px 15px;
             font-size: 12px;
         }
+        
+        /* تنسيقات تحميل الصورة */
+        .image-upload-container {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        .image-upload-container:hover {
+            border-color: #22c55e;
+        }
+        .image-upload-container.dragover {
+            border-color: #22c55e;
+            background-color: #f0fdf4;
+        }
+        .upload-preview {
+            max-width: 100%;
+            max-height: 200px;
+            margin-top: 10px;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -414,12 +438,10 @@
                                     <option value="admin">مدير النظام</option>
                                 </select>
                             </div>
-                            <label class="block text-sm mb-1">توقيع المستخدم (صورة):</label>
-                            <input type="file" id="new-user-signature" accept="image/*" class="w-full border p-2 rounded bg-white mb-2">
                             
-                            <!-- لوحة التوقيع الرقمي -->
+                            <!-- لوحة التوقيع الرقمي فقط -->
                             <div class="mb-2">
-                                <label class="block text-sm mb-1">أو التوقيع الرقمي:</label>
+                                <label class="block text-sm mb-1">توقيع المستخدم:</label>
                                 <div class="signature-pad">
                                     <canvas id="user-signature-canvas" class="signature-canvas"></canvas>
                                     <button type="button" id="clear-user-signature" class="signature-clear">مسح</button>
@@ -470,12 +492,10 @@
                                 <option value="عامل نظافة">عامل نظافة</option>
                                 <option value="حمال">حمال</option>
                             </select>
-                            <label class="block text-sm mb-1">صورة التوقيع:</label>
-                            <input type="file" id="emp-signature" accept="image/*" class="w-full border p-2 rounded mb-2">
                             
-                            <!-- لوحة التوقيع الرقمي للموظف -->
+                            <!-- لوحة التوقيع الرقمي للموظف فقط -->
                             <div class="mb-2">
-                                <label class="block text-sm mb-1">أو التوقيع الرقمي:</label>
+                                <label class="block text-sm mb-1">توقيع الموظف:</label>
                                 <div class="signature-pad">
                                     <canvas id="employee-signature-canvas" class="signature-canvas"></canvas>
                                     <button type="button" id="clear-employee-signature" class="signature-clear">مسح</button>
@@ -496,7 +516,7 @@
         <div class="text-right">جميع الحقوق محفوظة - للاستعمال الرسمي فقط</div>
     </footer>
 
-    <!-- مودال التوقيع -->
+    <!-- مودال التوقيع مع خيار رفع الصورة -->
     <div id="signature-modal" class="modal">
         <div class="modal-content">
             <div class="flex justify-between items-center mb-4">
@@ -505,10 +525,34 @@
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <div class="signature-pad mb-4">
-                <canvas id="modal-signature-canvas" class="signature-canvas"></canvas>
-                <button type="button" id="clear-modal-signature" class="signature-clear">مسح</button>
+            
+            <!-- خيارات التوقيع -->
+            <div class="mb-4">
+                <div class="flex gap-2 mb-3">
+                    <button id="tab-draw" class="flex-1 bg-green-600 text-white py-2 rounded font-bold">التوقيع الرقمي</button>
+                    <button id="tab-upload" class="flex-1 bg-gray-300 text-gray-700 py-2 rounded font-bold">رفع صورة التوقيع</button>
+                </div>
+                
+                <!-- لوحة التوقيع الرقمي -->
+                <div id="draw-tab" class="signature-tab">
+                    <div class="signature-pad mb-4">
+                        <canvas id="modal-signature-canvas" class="signature-canvas"></canvas>
+                        <button type="button" id="clear-modal-signature" class="signature-clear">مسح</button>
+                    </div>
+                </div>
+                
+                <!-- رفع صورة التوقيع -->
+                <div id="upload-tab" class="signature-tab hidden">
+                    <div class="image-upload-container" id="image-upload-area" onclick="document.getElementById('image-upload-input').click()">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-2"></i>
+                        <p class="text-gray-600">انقر لرفع صورة التوقيع</p>
+                        <p class="text-sm text-gray-400">أو اسحب وأفلت الصورة هنا</p>
+                        <input type="file" id="image-upload-input" accept="image/*" class="hidden" onchange="handleImageUpload(this)">
+                        <img id="upload-preview" class="upload-preview">
+                    </div>
+                </div>
             </div>
+            
             <div class="flex justify-between">
                 <button onclick="saveSignature()" class="bg-green-600 text-white px-4 py-2 rounded">حفظ التوقيع</button>
                 <button onclick="closeSignatureModal()" class="bg-gray-500 text-white px-4 py-2 rounded">إلغاء</button>
@@ -583,7 +627,8 @@
             SITES: 'grisland_sites',
             ATTENDANCE: 'grisland_attendance',
             SETTINGS: 'grisland_settings',
-            APPROVALS: 'grisland_approvals'
+            APPROVALS: 'grisland_approvals',
+            CURRENT_SESSION: 'grisland_current_session'
         };
 
         let currentUser = null;
@@ -604,11 +649,12 @@
         let currentSignatureType = null; // 'user' أو 'employee'
         let currentSignatureId = null; // معرف المستخدم أو الموظف
         let currentEmpIndex = null; // مؤشر الموظف في الموقع
-        
+        let currentSignatureMode = 'draw'; // 'draw' أو 'upload'
+        let uploadedSignatureImage = null;
+
         // Initial Data Seeding
         function initDB() {
             if (!localStorage.getItem(DB_KEYS.USERS)) {
-                // إضافة حقل signature فارغ مبدئياً للمستخدمين الافتراضيين
                 const defaultUsers = [
                     { id: '600', name: 'مدير النظام', role: 'admin', signature: '' },
                     { id: '500', name: 'معتمد التقارير', role: 'approver', signature: '' },
@@ -628,6 +674,20 @@
             }
             if(!localStorage.getItem(DB_KEYS.APPROVALS)) {
                 localStorage.setItem(DB_KEYS.APPROVALS, JSON.stringify({}));
+            }
+            
+            // استعادة الجلسة الحالية إذا كانت موجودة
+            const currentSession = localStorage.getItem(DB_KEYS.CURRENT_SESSION);
+            if (currentSession) {
+                const sessionData = JSON.parse(currentSession);
+                currentUser = sessionData.user;
+                if (currentUser) {
+                    document.getElementById('login-overlay').style.display = 'none';
+                    document.getElementById('user-display').innerText = `${currentUser.name} (${getRoleName(currentUser.role)})`;
+                    loadSidebarData();
+                    setupUIForRole();
+                    showScreen(sessionData.currentScreen || 'attendance');
+                }
             }
         }
         
@@ -673,23 +733,36 @@
 
             if (user) {
                 currentUser = user;
+                document.getElementById('login-id').value = '';
                 document.getElementById('login-overlay').style.display = 'none';
                 document.getElementById('user-display').innerText = `${user.name} (${getRoleName(user.role)})`;
                 loadSidebarData();
                 setupUIForRole();
-                showScreen('attendance'); 
+                showScreen('attendance');
+                
+                // حفظ حالة الجلسة
+                saveSession();
             } else {
                 showToast('رقم وظيفي غير صحيح', 'error');
             }
         }
 
+        function saveSession() {
+            const sessionData = {
+                user: currentUser,
+                currentScreen: document.querySelector('main > div:not(.hidden)').id.replace('screen-', '')
+            };
+            localStorage.setItem(DB_KEYS.CURRENT_SESSION, JSON.stringify(sessionData));
+        }
+
         function logout() {
-            // مسح أي حالة مؤقتة
-            currentUser = null;
-            document.getElementById('login-id').value = '';
-            // إعادة تحميل الصفحة بالكامل لضمان الأمان والعودة لشاشة الدخول
-            window.location.href = window.location.href; 
-            window.location.reload();
+            if (confirm('هل تريد تسجيل الخروج؟')) {
+                currentUser = null;
+                localStorage.removeItem(DB_KEYS.CURRENT_SESSION);
+                document.getElementById('login-id').value = '';
+                document.getElementById('login-overlay').style.display = 'flex';
+                showToast('تم تسجيل الخروج بنجاح', 'info');
+            }
         }
 
         function setupUIForRole() {
@@ -710,6 +783,7 @@
             
             // تهيئة لوحات التوقيع لجميع المستخدمين
             initSignaturePads();
+            initModalTabs();
         }
 
         function showScreen(screenId) {
@@ -719,6 +793,11 @@
             
             if(window.innerWidth < 768) {
                 document.getElementById('sidebar').classList.remove('open');
+            }
+            
+            // حفظ الشاشة الحالية في الجلسة
+            if (currentUser) {
+                saveSession();
             }
         }
 
@@ -951,7 +1030,7 @@
             unsavedChanges = false;
             showToast('تم حفظ البيانات وتقديم التقرير بنجاح.', 'success');
             
-            // التعديل هنا: إعادة تحميل الجدول فقط بدلاً من إغلاق الشاشة
+            // التحديث فقط دون إغلاق الشاشة
             loadAttendanceTable();
         }
 
@@ -1008,7 +1087,6 @@
             const tbody = document.getElementById('users-table-body');
             tbody.innerHTML = '';
             users.forEach((u, idx) => {
-                // إزالة الشرط الذي كان يحذف مدير النظام
                 const hasSig = u.signature ? 
                     `<div class="signature-dropdown">
                         <img src="${u.signature}" class="signature-img mx-auto cursor-pointer" onclick="openSignatureModal('user', '${u.id}')">
@@ -1082,58 +1160,39 @@
             const siteId = document.getElementById('settings-site-select').value;
             const name = document.getElementById('emp-name').value;
             const role = document.getElementById('emp-role').value;
-            const sigInput = document.getElementById('emp-signature');
             
             if (!siteId || !name) {
                 showToast('يرجى تعبئة جميع الحقول واختيار الموقع.', 'error');
                 return;
             }
 
-            // الحصول على التوقيع من لوحة التوقيع أو من الملف
-            const getSignature = () => {
-                return new Promise((resolve) => {
-                    // أولاً، تحقق من لوحة التوقيع
-                    if (!employeeSignatureCanvas.toDataURL().includes('base64,AAAA')) {
-                        resolve(employeeSignatureCanvas.toDataURL());
-                        return;
-                    }
-                    
-                    // إذا لم يكن هناك توقيع رقمي، تحقق من ملف التوقيع
-                    if (sigInput.files[0]) {
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            resolve(e.target.result);
-                        };
-                        reader.readAsDataURL(sigInput.files[0]);
-                    } else {
-                        resolve(''); // لا يوجد توقيع
-                    }
-                });
-            };
+            // الحصول على التوقيع من لوحة التوقيع
+            const signatureData = employeeSignatureCanvas.toDataURL();
+            
+            if (!isValidSignature(signatureData)) {
+                showToast('يرجى إضافة توقيع صالح للموظف', 'error');
+                return;
+            }
 
-            getSignature().then(signatureData => {
-                const sites = JSON.parse(localStorage.getItem(DB_KEYS.SITES));
-                const siteIndex = sites.findIndex(s => s.id == siteId);
-                if (siteIndex !== -1) {
-                    sites[siteIndex].employees.push({
-                        name: name,
-                        role: role,
-                        signature: signatureData
-                    });
-                    localStorage.setItem(DB_KEYS.SITES, JSON.stringify(sites));
-                    showToast('تم إضافة الموظف بنجاح', 'success');
-                    document.getElementById('emp-name').value = '';
-                    document.getElementById('emp-signature').value = '';
-                    clearSignature('employee');
-                }
-            });
+            const sites = JSON.parse(localStorage.getItem(DB_KEYS.SITES));
+            const siteIndex = sites.findIndex(s => s.id == siteId);
+            if (siteIndex !== -1) {
+                sites[siteIndex].employees.push({
+                    name: name,
+                    role: role,
+                    signature: signatureData
+                });
+                localStorage.setItem(DB_KEYS.SITES, JSON.stringify(sites));
+                showToast('تم إضافة الموظف بنجاح', 'success');
+                document.getElementById('emp-name').value = '';
+                clearSignature('employee');
+            }
         }
 
         function addUser() {
             const name = document.getElementById('new-user-name').value;
             const id = document.getElementById('new-user-id').value;
             const role = document.getElementById('new-user-role').value;
-            const sigInput = document.getElementById('new-user-signature');
 
             if(!name || !id) {
                 showToast('يرجى إدخال الاسم والرقم الوظيفي.', 'error');
@@ -1147,43 +1206,26 @@
                 return;
             }
 
-            // الحصول على التوقيع من لوحة التوقيع أو من الملف
-            const getSignature = () => {
-                return new Promise((resolve) => {
-                    // أولاً، تحقق من لوحة التوقيع
-                    if (!userSignatureCanvas.toDataURL().includes('base64,AAAA')) {
-                        resolve(userSignatureCanvas.toDataURL());
-                        return;
-                    }
-                    
-                    // إذا لم يكن هناك توقيع رقمي، تحقق من ملف التوقيع
-                    if (sigInput.files[0]) {
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            resolve(e.target.result);
-                        };
-                        reader.readAsDataURL(sigInput.files[0]);
-                    } else {
-                        resolve(''); // لا يوجد توقيع
-                    }
-                });
-            };
+            // الحصول على التوقيع من لوحة التوقيع
+            const signatureData = userSignatureCanvas.toDataURL();
+            
+            if (!isValidSignature(signatureData)) {
+                showToast('يرجى إضافة توقيع صالح للمستخدم', 'error');
+                return;
+            }
 
-            getSignature().then(signatureData => {
-                users.push({
-                    name: name,
-                    id: id,
-                    role: role,
-                    signature: signatureData
-                });
-                localStorage.setItem(DB_KEYS.USERS, JSON.stringify(users));
-                loadSettingsView();
-                document.getElementById('new-user-name').value = '';
-                document.getElementById('new-user-id').value = '';
-                document.getElementById('new-user-signature').value = '';
-                clearSignature('user');
-                showToast('تم إضافة المستخدم بنجاح', 'success');
+            users.push({
+                name: name,
+                id: id,
+                role: role,
+                signature: signatureData
             });
+            localStorage.setItem(DB_KEYS.USERS, JSON.stringify(users));
+            loadSettingsView();
+            document.getElementById('new-user-name').value = '';
+            document.getElementById('new-user-id').value = '';
+            clearSignature('user');
+            showToast('تم إضافة المستخدم بنجاح', 'success');
         }
 
         function deleteUser(id) {
@@ -1419,6 +1461,70 @@
             if (clearModalBtn) clearModalBtn.addEventListener('click', () => clearSignature('modal'));
         }
 
+        function initModalTabs() {
+            const drawTab = document.getElementById('tab-draw');
+            const uploadTab = document.getElementById('tab-upload');
+            const drawContent = document.getElementById('draw-tab');
+            const uploadContent = document.getElementById('upload-tab');
+
+            drawTab.addEventListener('click', () => {
+                drawTab.classList.remove('bg-gray-300', 'text-gray-700');
+                drawTab.classList.add('bg-green-600', 'text-white');
+                uploadTab.classList.remove('bg-green-600', 'text-white');
+                uploadTab.classList.add('bg-gray-300', 'text-gray-700');
+                drawContent.classList.remove('hidden');
+                uploadContent.classList.add('hidden');
+                currentSignatureMode = 'draw';
+            });
+
+            uploadTab.addEventListener('click', () => {
+                uploadTab.classList.remove('bg-gray-300', 'text-gray-700');
+                uploadTab.classList.add('bg-green-600', 'text-white');
+                drawTab.classList.remove('bg-green-600', 'text-white');
+                drawTab.classList.add('bg-gray-300', 'text-gray-700');
+                uploadContent.classList.remove('hidden');
+                drawContent.classList.add('hidden');
+                currentSignatureMode = 'upload';
+            });
+
+            // إضافة Drag & Drop functionality
+            const uploadArea = document.getElementById('image-upload-area');
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleImageUpload({ files: files });
+                }
+            });
+        }
+
+        function handleImageUpload(input) {
+            const file = input.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    uploadedSignatureImage = e.target.result;
+                    const preview = document.getElementById('upload-preview');
+                    preview.src = uploadedSignatureImage;
+                    preview.style.display = 'block';
+                    showToast('تم تحميل صورة التوقيع بنجاح', 'success');
+                };
+                reader.readAsDataURL(file);
+            } else {
+                showToast('يرجى اختيار صورة صالحة', 'error');
+            }
+        }
+
         function setupCanvasEvents(canvas, ctx, type) {
             const startDrawing = (e) => {
                 if (type === 'user') isUserDrawing = true;
@@ -1520,6 +1626,13 @@
             
             // إعادة تعيين لوحة التوقيع في المودال
             clearSignature('modal');
+            uploadedSignatureImage = null;
+            document.getElementById('upload-preview').style.display = 'none';
+            document.getElementById('image-upload-input').value = '';
+            
+            // تعيين وضع التوقيع الافتراضي
+            currentSignatureMode = 'draw';
+            document.getElementById('tab-draw').click();
             
             // تعيين عنوان المودال
             if (type === 'user') {
@@ -1542,10 +1655,17 @@
             currentSignatureType = null;
             currentSignatureId = null;
             currentEmpIndex = null;
+            uploadedSignatureImage = null;
         }
 
         function saveSignature() {
-            const signatureData = modalSignatureCanvas.toDataURL();
+            let signatureData = '';
+            
+            if (currentSignatureMode === 'draw') {
+                signatureData = modalSignatureCanvas.toDataURL();
+            } else if (currentSignatureMode === 'upload') {
+                signatureData = uploadedSignatureImage;
+            }
             
             if (!isValidSignature(signatureData)) {
                 showToast('يرجى إضافة توقيع صالح', 'error');
@@ -1579,6 +1699,13 @@
 
         document.getElementById('menu-toggle').addEventListener('click', () => {
             document.getElementById('sidebar').classList.toggle('open');
+        });
+
+        // منع إغلاق الشاشة عند تحديث الصفحة
+        window.addEventListener('beforeunload', (e) => {
+            if (currentUser) {
+                // لا تفعل شيئاً - دع الجلسة تبقى محفوظة
+            }
         });
 
         initDB();
