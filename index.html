@@ -241,7 +241,6 @@
             object-fit: contain;
         }
 
-        /* تنسيقات PDF محسنة */
         .pdf-page {
             position: relative;
             min-height: 100vh;
@@ -332,7 +331,7 @@
         </aside>
 
         <main>
-            <div id="screen-attendance" class="h-full flex flex-col hidden">
+            <div id="screen-attendance" class="h-full flex flex-col">
                 <div class="mb-6 text-center">
                     <h2 class="text-2xl font-bold text-green-800">شركة الجزيرة الخضراء للمواشي والاغنام</h2>
                     <h3 id="current-site-name" class="text-xl text-gray-600 mt-1">-- اختر الموقع --</h3>
@@ -406,7 +405,7 @@
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="bg-white p-4 rounded shadow order-2 md:order-1">
+                    <div class="bg-white p-4 rounded shadow">
                         <h3 class="font-bold text-lg mb-3 text-green-700">إضافة مستخدم وتوقيعه</h3>
                         <div class="bg-gray-50 p-3 rounded mb-4 border">
                             <label class="block text-sm font-bold mb-1">بيانات المستخدم الجديد:</label>
@@ -452,7 +451,7 @@
                         </div>
                     </div>
 
-                    <div class="bg-white p-4 rounded shadow order-1 md:order-2">
+                    <div class="bg-white p-4 rounded shadow">
                         <h3 class="font-bold text-lg mb-3 text-green-700">إضافة موقع (مسلخ)</h3>
                         <div class="flex gap-2 mb-4">
                             <input type="text" id="new-site-name" placeholder="اسم المسلخ" class="border p-2 rounded flex-grow">
@@ -466,9 +465,9 @@
                             </select>
                             <input type="text" id="emp-name" placeholder="اسم الموظف" class="w-full border p-2 rounded mb-2">
                             <select id="emp-role" class="w-full border p-2 rounded mb-2">
-                                 <option value=" مشرف المسلخ">مشرف المسلخ </option>
+                                 <option value="مشرف المسلخ">مشرف المسلخ</option>
                                 <option value="مشرف نظافة">مشرف نظافة</option>
-                                 <option value=" محاسب">محاسب </option>
+                                 <option value="محاسب">محاسب</option>
                                 <option value="قصاب">قصاب</option>
                                 <option value="عامل نظافة">عامل نظافة</option>
                                 <option value="حمال">حمال</option>
@@ -516,12 +515,17 @@
         </div>
     </div>
 
-    <!-- قالب PDF محسن مع فوتر ثابت -->
-    <div id="pdf-template" style="display: none;">
-        <!-- سيتم إنشاء الصفحات ديناميكياً هنا -->
-    </div>
+    <div id="pdf-template" style="display: none;"></div>
 
     <script>
+        // تعريف المتغيرات العامة
+        let currentUser = null;
+        let currentMonth = new Date().toISOString().slice(0, 7);
+        let userSignatureCanvas, employeeSignatureCanvas, modalSignatureCanvas;
+        let userSignatureCtx, employeeSignatureCtx, modalSignatureCtx;
+        let isUserDrawing = false, isEmployeeDrawing = false, isModalDrawing = false;
+        let currentSignatureType = null, currentSignatureId = null, currentEmpIndex = null;
+
         const DB_KEYS = {
             USERS: 'grisland_users',
             SITES: 'grisland_sites',
@@ -530,51 +534,7 @@
             APPROVALS: 'grisland_approvals'
         };
 
-        let currentUser = null;
-        let currentMonth = new Date().toISOString().slice(0, 7);
-        
-        let userSignatureCanvas = null;
-        let employeeSignatureCanvas = null;
-        let modalSignatureCanvas = null;
-        let userSignatureCtx = null;
-        let employeeSignatureCtx = null;
-        let modalSignatureCtx = null;
-        let isUserDrawing = false;
-        let isEmployeeDrawing = false;
-        let isModalDrawing = false;
-        
-        let currentSignatureType = null;
-        let currentSignatureId = null;
-        let currentEmpIndex = null;
-        
-        // حفظ حالة المستخدم في localStorage
-        function saveUserState() {
-            if (currentUser) {
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                localStorage.setItem('currentScreen', document.querySelector('main > div:not(.hidden)').id.replace('screen-', ''));
-            }
-        }
-
-        // استعادة حالة المستخدم من localStorage
-        function restoreUserState() {
-            const savedUser = localStorage.getItem('currentUser');
-            const savedScreen = localStorage.getItem('currentScreen');
-            
-            if (savedUser) {
-                currentUser = JSON.parse(savedUser);
-                document.getElementById('login-overlay').style.display = 'none';
-                document.getElementById('user-display').innerText = `${currentUser.name} (${getRoleName(currentUser.role)})`;
-                loadSidebarData();
-                setupUIForRole();
-                
-                if (savedScreen) {
-                    showScreen(savedScreen);
-                } else {
-                    showScreen('attendance');
-                }
-            }
-        }
-
+        // === الدوال الأساسية ===
         function initDB() {
             if (!localStorage.getItem(DB_KEYS.USERS)) {
                 const defaultUsers = [
@@ -598,21 +558,15 @@
                 localStorage.setItem(DB_KEYS.APPROVALS, JSON.stringify({}));
             }
         }
-        
+
         function showToast(message, type = 'success') {
             const toastContainer = document.getElementById('toast-container');
             const toastMessage = document.getElementById('toast-message');
             
-            toastMessage.className = 'rounded-lg shadow-xl p-4 text-white font-semibold';
-            
-            let bgColor = 'bg-green-600';
-            if (type === 'error') {
-                bgColor = 'bg-red-600';
-            } else if (type === 'info') {
-                bgColor = 'bg-blue-600';
-            }
+            const bgColor = type === 'error' ? 'bg-red-600' : 
+                           type === 'info' ? 'bg-blue-600' : 'bg-green-600';
 
-            toastMessage.classList.add(bgColor);
+            toastMessage.className = `rounded-lg shadow-xl p-4 text-white font-semibold ${bgColor}`;
             toastMessage.innerText = message;
             
             toastContainer.classList.remove('opacity-0', 'pointer-events-none');
@@ -621,22 +575,28 @@
             setTimeout(() => {
                 toastContainer.classList.remove('opacity-100');
                 toastContainer.classList.add('opacity-0', 'pointer-events-none');
-            }, 2500);
+            }, 3000);
         }
 
         function login() {
             const id = document.getElementById('login-id').value;
+            if (!id) {
+                showToast('يرجى إدخال الرقم الوظيفي', 'error');
+                return;
+            }
+
             const users = JSON.parse(localStorage.getItem(DB_KEYS.USERS));
             const user = users.find(u => u.id === id);
 
             if (user) {
                 currentUser = user;
-                saveUserState();
+                localStorage.setItem('currentUser', JSON.stringify(user));
                 document.getElementById('login-overlay').style.display = 'none';
                 document.getElementById('user-display').innerText = `${user.name} (${getRoleName(user.role)})`;
                 loadSidebarData();
                 setupUIForRole();
-                showScreen('attendance'); 
+                showScreen('attendance');
+                showToast(`مرحباً ${user.name}`, 'success');
             } else {
                 showToast('رقم وظيفي غير صحيح', 'error');
             }
@@ -645,15 +605,15 @@
         function logout() {
             currentUser = null;
             localStorage.removeItem('currentUser');
-            localStorage.removeItem('currentScreen');
             document.getElementById('login-id').value = '';
             document.getElementById('login-overlay').style.display = 'flex';
+            showToast('تم تسجيل الخروج', 'info');
         }
 
         function setupUIForRole() {
             const role = currentUser.role;
-
             const navSettings = document.getElementById('nav-settings');
+            
             if (role === 'admin') {
                 navSettings.classList.remove('hidden');
                 loadSettingsView();
@@ -667,20 +627,19 @@
         }
 
         function showScreen(screenId) {
+            // إخفاء جميع الشاشات أولاً
             document.getElementById('screen-attendance').classList.add('hidden');
             document.getElementById('screen-settings').classList.add('hidden');
-            document.getElementById(`screen-${screenId}`).classList.remove('hidden');
             
-            // حفظ الشاشة الحالية
-            if (currentUser) {
-                localStorage.setItem('currentScreen', screenId);
-            }
+            // إظهار الشاشة المطلوبة
+            document.getElementById(`screen-${screenId}`).classList.remove('hidden');
             
             if(window.innerWidth < 768) {
                 document.getElementById('sidebar').classList.remove('open');
             }
         }
 
+        // === إدارة المواقع ===
         function loadSitesDropdown() {
             const sites = JSON.parse(localStorage.getItem(DB_KEYS.SITES));
             const select = document.getElementById('site-select');
@@ -693,250 +652,135 @@
             });
         }
 
-        function loadAttendanceTable() {
-            const siteId = document.getElementById('site-select').value;
-            const monthVal = document.getElementById('month-picker').value;
-            const siteNameEl = document.getElementById('current-site-name');
-            const tableHead = document.getElementById('table-header-row');
-            const tableBody = document.getElementById('table-body');
-            const statusDiv = document.getElementById('attendance-status-bar');
-            
-            const btnSave = document.getElementById('btn-save');
-            const btnApproveSup = document.getElementById('btn-approve-sup');
-            const btnApproveApp = document.getElementById('btn-approve-app');
-
-            btnSave.classList.add('hidden');
-            btnApproveSup.classList.add('hidden');
-            btnApproveApp.classList.add('hidden');
-
-            if (!siteId || !monthVal) {
-                siteNameEl.innerText = "-- اختر الموقع --";
-                tableBody.innerHTML = '<tr><td colspan="100" class="p-4 text-center text-gray-500">الرجاء اختيار الموقع والشهر</td></tr>';
-                statusDiv.classList.add('hidden');
+        function addSite() {
+            const name = document.getElementById('new-site-name').value.trim();
+            if (!name) {
+                showToast('يرجى إدخال اسم المسلخ', 'error');
                 return;
             }
-
+            
             const sites = JSON.parse(localStorage.getItem(DB_KEYS.SITES));
-            const site = sites.find(s => s.id == siteId);
-            siteNameEl.innerText = site.name;
+            const newId = Date.now().toString();
+            sites.push({ id: newId, name: name, employees: [] });
+            localStorage.setItem(DB_KEYS.SITES, JSON.stringify(sites));
+            document.getElementById('new-site-name').value = '';
+            showToast('تم إضافة الموقع بنجاح', 'success');
+            loadSettingsView();
+            loadSitesDropdown();
+        }
 
-            const [year, month] = monthVal.split('-');
-            const daysInMonth = new Date(year, month, 0).getDate();
-
-            const attendanceKey = `${siteId}_${monthVal}`;
-            const allAttendance = JSON.parse(localStorage.getItem(DB_KEYS.ATTENDANCE));
-            const siteAttendance = allAttendance[attendanceKey] || {};
-
-            const allApprovals = JSON.parse(localStorage.getItem(DB_KEYS.APPROVALS));
-            const approvals = allApprovals[attendanceKey] || { supervisor: false, approver: false };
-
-            const isFullyApproved = approvals.approver === true;
-            let isSupervisorApproved = approvals.supervisor === true;
-
-            const canEdit = (currentUser.role === 'admin' || currentUser.role === 'supervisor') && !isFullyApproved;
+        // === إدارة الموظفين ===
+        function addEmployee() {
+            const siteId = document.getElementById('settings-site-select').value;
+            const name = document.getElementById('emp-name').value.trim();
+            const role = document.getElementById('emp-role').value;
             
-            let statusText = "";
-            statusDiv.classList.remove('hidden');
-
-            if (isFullyApproved) {
-                statusText = "تم اعتماد التقرير نهائياً (للقراءة فقط)";
-                statusDiv.className = "p-2 bg-green-100 text-green-800 text-sm border-b";
-            } else if (isSupervisorApproved) {
-                statusText = "تم اعتماد مشرف الموقع. بانتظار معتمد التقارير.";
-                statusDiv.className = "p-2 bg-yellow-100 text-yellow-800 text-sm border-b";
-            } else {
-                statusDiv.classList.add('hidden');
-            }
-
-            if (currentUser.role === 'admin' || currentUser.role === 'supervisor') {
-                if (canEdit) {
-                    btnSave.classList.remove('hidden');
-                    if (currentUser.role === 'supervisor' && !isSupervisorApproved) {
-                         btnApproveSup.classList.remove('hidden');
-                    }
-                }
-            }
-            if (currentUser.role === 'approver' && !isFullyApproved) {
-                if(isSupervisorApproved) {
-                    btnApproveApp.classList.remove('hidden');
-                } else {
-                    showToast("تقرير الموقع لم يعتمد بعد من مشرف الموقع.", 'info');
-                }
-            }
-
-            let headerHTML = `<th class="w-32 sticky right-0 bg-gray-100 z-10">الموظف</th><th class="w-24">الوظيفة</th>`;
-            for (let i = 1; i <= daysInMonth; i++) {
-                headerHTML += `<th class="w-8">${i}</th>`;
-            }
-            headerHTML += `<th class="w-24">عدد ايام الحضور</th><th class="w-24">التوقيع</th>`;
-            tableHead.innerHTML = headerHTML;
-
-            tableBody.innerHTML = '';
-            if (!site.employees || site.employees.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="${daysInMonth + 4}" class="p-4 text-center">لا يوجد موظفين مسجلين لهذا الموقع. اذهب للإعدادات لإضافة موظفين.</td></tr>`;
+            if (!siteId || !name) {
+                showToast('يرجى تعبئة جميع الحقول واختيار الموقع', 'error');
                 return;
             }
 
-            site.employees.forEach((emp, index) => {
-                const tr = document.createElement('tr');
-                let rowHTML = `<td class="sticky right-0 bg-white font-bold z-10">${emp.name}</td><td>${emp.role}</td>`;
-                
-                // حساب أيام الحضور الفعلية
-                let attendanceDays = 0;
-                
-                for (let i = 1; i <= daysInMonth; i++) {
-                    const status = siteAttendance[index] && siteAttendance[index][i] ? siteAttendance[index][i] : 'P';
-                    
-                    if (canEdit) {
-                         rowHTML += `<td>
-                            <select data-emp="${index}" data-day="${i}" class="attendance-select" onchange="updateAttendanceDays(${index}, ${daysInMonth})">
-                                <option value="P" ${status==='P'?'selected':''}>P</option>
-                                <option value="A" ${status==='A'?'selected':''}>A</option>
-                                <option value="V" ${status==='V'?'selected':''}>V</option>
-                            </select>
-                        </td>`;
-                    } else {
-                        rowHTML += `<td class="text-gray-600 font-bold">${status || 'P'}</td>`;
-                    }
-                    
-                    // حساب أيام الحضور: P و V تعتبر حضور
-                    if (status === 'P' || status === 'V') {
-                        attendanceDays++;
-                    }
-                }
-                
-                rowHTML += `<td class="attendance-days" id="attendance-days-${index}">${attendanceDays}</td>`;
-                
-                // إضافة التوقيع في الجدول
-                const sigSrc = emp.signature || '';
-                let signatureCell = '';
-                if(sigSrc) {
-                    signatureCell = `<td class="signature-dropdown">
-                        <img src="${sigSrc}" class="signature-image mx-auto cursor-pointer" onclick="openSignatureModal('employee', '${siteId}', ${index})">
-                        <div class="signature-dropdown-content">
-                            <p class="text-sm mb-2">إضافة توقيع جديد:</p>
-                            <button onclick="openSignatureModal('employee', '${siteId}', ${index})" class="bg-blue-500 text-white px-2 py-1 rounded text-xs">توقيع جديد</button>
-                        </div>
-                    </td>`;
-                } else {
-                    signatureCell = `<td class="signature-dropdown">
-                        <span class="text-gray-400 cursor-pointer text-sm" onclick="openSignatureModal('employee', '${siteId}', ${index})">إضافة توقيع</span>
-                        <div class="signature-dropdown-content">
-                            <p class="text-sm mb-2">إضافة توقيع:</p>
-                            <button onclick="openSignatureModal('employee', '${siteId}', ${index})" class="bg-blue-500 text-white px-2 py-1 rounded text-xs">إضافة توقيع</button>
-                        </div>
-                    </td>`;
-                }
-                rowHTML += signatureCell;
-                
-                tr.innerHTML = rowHTML;
-                tableBody.appendChild(tr);
-            });
+            let signatureData = '';
+            const fileInput = document.getElementById('emp-signature');
             
-            // تحديث أيام الحضور بعد تحميل الجدول
-            site.employees.forEach((emp, index) => {
-                updateAttendanceDays(index, daysInMonth);
-            });
-        }
-
-        function updateAttendanceDays(empIndex, daysInMonth) {
-            const row = document.querySelector(`tr:nth-child(${empIndex + 1})`);
-            if (!row) return;
-            
-            const daySelects = row.querySelectorAll('.attendance-select');
-            
-            let attendanceDays = 0;
-            
-            daySelects.forEach(select => {
-                if (select.value === 'P' || select.value === 'V') {
-                    attendanceDays++; // إضافة يوم عند وجود P أو V
-                }
-                // A لا تضاف إلى الحضور
-            });
-            
-            const attendanceDaysElement = document.getElementById(`attendance-days-${empIndex}`);
-            if (attendanceDaysElement) {
-                attendanceDaysElement.textContent = attendanceDays;
-            }
-            
-            markUnsaved();
-        }
-
-        let unsavedChanges = false;
-        function markUnsaved() { unsavedChanges = true; }
-
-        function saveAttendance() {
-            const siteId = document.getElementById('site-select').value;
-            const monthVal = document.getElementById('month-picker').value;
-            if (!siteId || !monthVal) {
-                showToast('الرجاء اختيار الموقع والشهر أولاً.', 'error');
-                return;
-            }
-
-            const inputs = document.querySelectorAll('#main-table select.attendance-select');
-            const data = {};
-
-            inputs.forEach(input => {
-                const empIdx = input.getAttribute('data-emp');
-                const day = input.getAttribute('data-day');
-                const val = input.value;
-                if (!data[empIdx]) data[empIdx] = {};
-                data[empIdx][day] = val;
-            });
-
-            const allAttendance = JSON.parse(localStorage.getItem(DB_KEYS.ATTENDANCE));
-            const key = `${siteId}_${monthVal}`;
-            allAttendance[key] = data;
-            localStorage.setItem(DB_KEYS.ATTENDANCE, JSON.stringify(allAttendance));
-            
-            unsavedChanges = false;
-            showToast('تم حفظ البيانات وتقديم التقرير بنجاح.', 'success');
-            
-            loadAttendanceTable();
-        }
-
-        function approveReport(type) {
-            const siteId = document.getElementById('site-select').value;
-            const monthVal = document.getElementById('month-picker').value;
-            if (!siteId || !monthVal) {
-                showToast('الرجاء اختيار التقرير أولاً', 'error');
+            // التحقق من التوقيع الرقمي أولاً
+            if (isCanvasNotEmpty(employeeSignatureCanvas)) {
+                signatureData = employeeSignatureCanvas.toDataURL();
+            } 
+            // ثم التحقق من ملف التوقيع
+            else if (fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    signatureData = e.target.result;
+                    saveEmployeeData(siteId, name, role, signatureData);
+                };
+                reader.readAsDataURL(fileInput.files[0]);
                 return;
             }
             
-            const key = `${siteId}_${monthVal}`;
-            const allApprovals = JSON.parse(localStorage.getItem(DB_KEYS.APPROVALS));
-            const current = allApprovals[key] || { supervisor: false, approver: false };
-
-            if (type === 'supervisor') {
-                if(unsavedChanges) saveAttendance();
-                current.supervisor = true;
-                showToast('تم اعتماد مشرف الموقع.', 'success');
-            } else if (type === 'approver') {
-                if (!current.supervisor) {
-                    showToast('لا يمكن الاعتماد قبل اعتماد مشرف الموقع.', 'error');
-                    return;
-                }
-                current.approver = true;
-                showToast('تم اعتماد التقرير نهائياً.', 'success');
-            }
-
-            allApprovals[key] = current;
-            localStorage.setItem(DB_KEYS.APPROVALS, JSON.stringify(allApprovals));
-            loadAttendanceTable();
+            saveEmployeeData(siteId, name, role, signatureData);
         }
 
-        function loadSidebarData() {
-            const settings = JSON.parse(localStorage.getItem(DB_KEYS.SETTINGS));
-            const logoImg = document.getElementById('sidebar-logo');
-            const noLogo = document.getElementById('no-logo-text');
+        function saveEmployeeData(siteId, name, role, signatureData) {
+            const sites = JSON.parse(localStorage.getItem(DB_KEYS.SITES));
+            const siteIndex = sites.findIndex(s => s.id == siteId);
+            if (siteIndex !== -1) {
+                sites[siteIndex].employees.push({
+                    name: name,
+                    role: role,
+                    signature: signatureData
+                });
+                localStorage.setItem(DB_KEYS.SITES, JSON.stringify(sites));
+                showToast('تم إضافة الموظف بنجاح', 'success');
+                document.getElementById('emp-name').value = '';
+                document.getElementById('emp-signature').value = '';
+                clearSignature('employee');
+                loadSettingsView();
+            }
+        }
+
+        // === إدارة المستخدمين ===
+        function addUser() {
+            const name = document.getElementById('new-user-name').value.trim();
+            const id = document.getElementById('new-user-id').value;
+            const role = document.getElementById('new-user-role').value;
+
+            if(!name || !id) {
+                showToast('يرجى إدخال الاسم والرقم الوظيفي', 'error');
+                return;
+            }
+
+            const users = JSON.parse(localStorage.getItem(DB_KEYS.USERS));
+            if(users.find(u => u.id === id)) {
+                showToast('الرقم الوظيفي موجود مسبقاً', 'error');
+                return;
+            }
+
+            let signatureData = '';
+            const fileInput = document.getElementById('new-user-signature');
             
-            if (settings.logo) {
-                logoImg.src = settings.logo;
-                logoImg.classList.remove('hidden');
-                noLogo.classList.add('hidden');
-            } else {
-                logoImg.classList.add('hidden');
-                noLogo.classList.remove('hidden');
+            // التحقق من التوقيع الرقمي أولاً
+            if (isCanvasNotEmpty(userSignatureCanvas)) {
+                signatureData = userSignatureCanvas.toDataURL();
+            } 
+            // ثم التحقق من ملف التوقيع
+            else if (fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    signatureData = e.target.result;
+                    saveUserData(name, id, role, signatureData);
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+                return;
+            }
+            
+            saveUserData(name, id, role, signatureData);
+        }
+
+        function saveUserData(name, id, role, signatureData) {
+            const users = JSON.parse(localStorage.getItem(DB_KEYS.USERS));
+            users.push({
+                name: name,
+                id: id,
+                role: role,
+                signature: signatureData
+            });
+            localStorage.setItem(DB_KEYS.USERS, JSON.stringify(users));
+            loadSettingsView();
+            document.getElementById('new-user-name').value = '';
+            document.getElementById('new-user-id').value = '';
+            document.getElementById('new-user-signature').value = '';
+            clearSignature('user');
+            showToast('تم إضافة المستخدم بنجاح', 'success');
+        }
+
+        function deleteUser(id) {
+            if (confirm('هل أنت متأكد من حذف هذا المستخدم؟')) {
+                let users = JSON.parse(localStorage.getItem(DB_KEYS.USERS));
+                users = users.filter(u => u.id !== id);
+                localStorage.setItem(DB_KEYS.USERS, JSON.stringify(users));
+                loadSettingsView();
+                showToast('تم حذف المستخدم بنجاح', 'info');
             }
         }
 
@@ -944,23 +788,13 @@
             const users = JSON.parse(localStorage.getItem(DB_KEYS.USERS));
             const tbody = document.getElementById('users-table-body');
             tbody.innerHTML = '';
-            users.forEach((u, idx) => {
-                if(u.id === '600') return; 
+            
+            users.forEach((u) => {
+                if(u.id === '600') return;
+                
                 const hasSig = u.signature ? 
-                    `<div class="signature-dropdown">
-                        <img src="${u.signature}" class="h-6 w-auto mx-auto cursor-pointer signature-image" onclick="openSignatureModal('user', '${u.id}')">
-                        <div class="signature-dropdown-content">
-                            <p class="text-sm mb-2">إضافة توقيع جديد:</p>
-                            <button onclick="openSignatureModal('user', '${u.id}')" class="bg-blue-500 text-white px-2 py-1 rounded text-xs">توقيع جديد</button>
-                        </div>
-                    </div>` : 
-                    `<div class="signature-dropdown">
-                        <span class="text-gray-400 cursor-pointer text-sm" onclick="openSignatureModal('user', '${u.id}')">إضافة توقيع</span>
-                        <div class="signature-dropdown-content">
-                            <p class="text-sm mb-2">إضافة توقيع:</p>
-                            <button onclick="openSignatureModal('user', '${u.id}')" class="bg-blue-500 text-white px-2 py-1 rounded text-xs">إضافة توقيع</button>
-                        </div>
-                    </div>`;
+                    `<img src="${u.signature}" class="h-6 w-auto mx-auto cursor-pointer signature-image" onclick="openSignatureModal('user', '${u.id}')">` : 
+                    `<span class="text-gray-400 cursor-pointer text-sm" onclick="openSignatureModal('user', '${u.id}')">إضافة توقيع</span>`;
                 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
@@ -984,172 +818,307 @@
             });
         }
 
-        function handleLogoUpload(input) {
-            const file = input.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const settings = JSON.parse(localStorage.getItem(DB_KEYS.SETTINGS));
-                    settings.logo = e.target.result;
-                    localStorage.setItem(DB_KEYS.SETTINGS, JSON.stringify(settings));
-                    loadSidebarData();
-                    showToast('تم تحديث الشعار', 'success');
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        function addSite() {
-            const name = document.getElementById('new-site-name').value;
-            if (!name) return;
-            const sites = JSON.parse(localStorage.getItem(DB_KEYS.SITES));
-            const newId = Date.now().toString();
-            sites.push({ id: newId, name: name, employees: [] });
-            localStorage.setItem(DB_KEYS.SITES, JSON.stringify(sites));
-            document.getElementById('new-site-name').value = '';
-            showToast('تم إضافة الموقع', 'success');
-            loadSettingsView();
-            loadSitesDropdown();
-        }
-
-        function addEmployee() {
-            const siteId = document.getElementById('settings-site-select').value;
-            const name = document.getElementById('emp-name').value;
-            const role = document.getElementById('emp-role').value;
-            const sigInput = document.getElementById('emp-signature');
+        // === نظام الحضور ===
+        function loadAttendanceTable() {
+            const siteId = document.getElementById('site-select').value;
+            const monthVal = document.getElementById('month-picker').value;
             
-            if (!siteId || !name) {
-                showToast('يرجى تعبئة جميع الحقول واختيار الموقع.', 'error');
+            if (!siteId || !monthVal) {
+                document.getElementById('current-site-name').innerText = "-- اختر الموقع --";
+                document.getElementById('table-body').innerHTML = '<tr><td colspan="100" class="p-4 text-center text-gray-500">الرجاء اختيار الموقع والشهر</td></tr>';
+                document.getElementById('attendance-status-bar').classList.add('hidden');
+                hideAllButtons();
                 return;
             }
 
-            const getSignature = () => {
-                return new Promise((resolve) => {
-                    // التحقق من لوحة التوقيع أولاً
-                    if (isCanvasNotEmpty(employeeSignatureCanvas)) {
-                        resolve(employeeSignatureCanvas.toDataURL());
-                        return;
-                    }
-                    
-                    // إذا لم يكن هناك توقيع رقمي، تحقق من ملف التوقيع
-                    if (sigInput.files[0]) {
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            resolve(e.target.result);
-                        };
-                        reader.readAsDataURL(sigInput.files[0]);
-                    } else {
-                        resolve('');
-                    }
-                });
-            };
+            const sites = JSON.parse(localStorage.getItem(DB_KEYS.SITES));
+            const site = sites.find(s => s.id == siteId);
+            if (!site) {
+                showToast('الموقع غير موجود', 'error');
+                return;
+            }
 
-            getSignature().then(signatureData => {
-                const sites = JSON.parse(localStorage.getItem(DB_KEYS.SITES));
-                const siteIndex = sites.findIndex(s => s.id == siteId);
-                if (siteIndex !== -1) {
-                    sites[siteIndex].employees.push({
-                        name: name,
-                        role: role,
-                        signature: signatureData
-                    });
-                    localStorage.setItem(DB_KEYS.SITES, JSON.stringify(sites));
-                    showToast('تم إضافة الموظف بنجاح', 'success');
-                    document.getElementById('emp-name').value = '';
-                    document.getElementById('emp-signature').value = '';
-                    clearSignature('employee');
-                    loadSettingsView();
+            document.getElementById('current-site-name').innerText = site.name;
+
+            const [year, month] = monthVal.split('-');
+            const daysInMonth = new Date(year, month, 0).getDate();
+
+            // بناء رأس الجدول
+            let headerHTML = `<th class="w-32 sticky right-0 bg-gray-100 z-10">الموظف</th><th class="w-24">الوظيفة</th>`;
+            for (let i = 1; i <= daysInMonth; i++) {
+                headerHTML += `<th class="w-8">${i}</th>`;
+            }
+            headerHTML += `<th class="w-24">أيام الحضور</th><th class="w-24">التوقيع</th>`;
+            document.getElementById('table-header-row').innerHTML = headerHTML;
+
+            // بناء جسم الجدول
+            const tableBody = document.getElementById('table-body');
+            tableBody.innerHTML = '';
+
+            if (!site.employees || site.employees.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="${daysInMonth + 4}" class="p-4 text-center">لا يوجد موظفين مسجلين لهذا الموقع</td></tr>`;
+                hideAllButtons();
+                return;
+            }
+
+            const attendanceKey = `${siteId}_${monthVal}`;
+            const allAttendance = JSON.parse(localStorage.getItem(DB_KEYS.ATTENDANCE));
+            const siteAttendance = allAttendance[attendanceKey] || {};
+
+            site.employees.forEach((emp, index) => {
+                const tr = document.createElement('tr');
+                let rowHTML = `<td class="sticky right-0 bg-white font-bold z-10">${emp.name}</td><td>${emp.role}</td>`;
+                
+                let attendanceDays = 0;
+                
+                for (let i = 1; i <= daysInMonth; i++) {
+                    const status = siteAttendance[index] && siteAttendance[index][i] ? siteAttendance[index][i] : 'P';
+                    
+                    rowHTML += `<td>
+                        <select data-emp="${index}" data-day="${i}" class="attendance-select" onchange="updateAttendanceDays(${index}, ${daysInMonth})">
+                            <option value="P" ${status==='P'?'selected':''}>P</option>
+                            <option value="A" ${status==='A'?'selected':''}>A</option>
+                            <option value="V" ${status==='V'?'selected':''}>V</option>
+                        </select>
+                    </td>`;
+                    
+                    if (status === 'P' || status === 'V') {
+                        attendanceDays++;
+                    }
+                }
+                
+                rowHTML += `<td class="attendance-days" id="attendance-days-${index}">${attendanceDays}</td>`;
+                
+                // إضافة التوقيع
+                const sigSrc = emp.signature || '';
+                const signatureCell = sigSrc ? 
+                    `<td><img src="${sigSrc}" class="signature-image mx-auto cursor-pointer" onclick="openSignatureModal('employee', '${siteId}', ${index})"></td>` :
+                    `<td><span class="text-gray-400 cursor-pointer text-sm" onclick="openSignatureModal('employee', '${siteId}', ${index})">إضافة توقيع</span></td>`;
+                
+                rowHTML += signatureCell;
+                tr.innerHTML = rowHTML;
+                tableBody.appendChild(tr);
+            });
+
+            // إظهار أزرار الحفظ والاعتماد
+            setupActionButtons(siteId, monthVal);
+        }
+
+        function hideAllButtons() {
+            document.getElementById('btn-save').classList.add('hidden');
+            document.getElementById('btn-approve-sup').classList.add('hidden');
+            document.getElementById('btn-approve-app').classList.add('hidden');
+        }
+
+        function updateAttendanceDays(empIndex, daysInMonth) {
+            const row = document.querySelector(`tr:nth-child(${empIndex + 1})`);
+            if (!row) return;
+            
+            const daySelects = row.querySelectorAll('.attendance-select');
+            let attendanceDays = 0;
+            
+            daySelects.forEach(select => {
+                if (select.value === 'P' || select.value === 'V') {
+                    attendanceDays++;
                 }
             });
+            
+            const daysElement = document.getElementById(`attendance-days-${empIndex}`);
+            if (daysElement) {
+                daysElement.textContent = attendanceDays;
+            }
         }
 
-        function addUser() {
-            const name = document.getElementById('new-user-name').value;
-            const id = document.getElementById('new-user-id').value;
-            const role = document.getElementById('new-user-role').value;
-            const sigInput = document.getElementById('new-user-signature');
-
-            if(!name || !id) {
-                showToast('يرجى إدخال الاسم والرقم الوظيفي.', 'error');
+        function saveAttendance() {
+            const siteId = document.getElementById('site-select').value;
+            const monthVal = document.getElementById('month-picker').value;
+            
+            if (!siteId || !monthVal) {
+                showToast('الرجاء اختيار الموقع والشهر أولاً', 'error');
                 return;
             }
 
-            const users = JSON.parse(localStorage.getItem(DB_KEYS.USERS));
-            if(users.find(u => u.id === id)) {
-                showToast('الرقم الوظيفي موجود مسبقاً.', 'error');
-                return;
-            }
+            const inputs = document.querySelectorAll('#main-table select.attendance-select');
+            const data = {};
 
-            const getSignature = () => {
-                return new Promise((resolve) => {
-                    // التحقق من لوحة التوقيع أولاً
-                    if (isCanvasNotEmpty(userSignatureCanvas)) {
-                        resolve(userSignatureCanvas.toDataURL());
-                        return;
-                    }
-                    
-                    // إذا لم يكن هناك توقيع رقمي، تحقق من ملف التوقيع
-                    if (sigInput.files[0]) {
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            resolve(e.target.result);
-                        };
-                        reader.readAsDataURL(sigInput.files[0]);
-                    } else {
-                        resolve('');
-                    }
-                });
-            };
-
-            getSignature().then(signatureData => {
-                users.push({
-                    name: name,
-                    id: id,
-                    role: role,
-                    signature: signatureData
-                });
-                localStorage.setItem(DB_KEYS.USERS, JSON.stringify(users));
-                loadSettingsView();
-                document.getElementById('new-user-name').value = '';
-                document.getElementById('new-user-id').value = '';
-                document.getElementById('new-user-signature').value = '';
-                clearSignature('user');
-                showToast('تم إضافة المستخدم بنجاح', 'success');
+            inputs.forEach(input => {
+                const empIdx = input.getAttribute('data-emp');
+                const day = input.getAttribute('data-day');
+                const val = input.value;
+                if (!data[empIdx]) data[empIdx] = {};
+                data[empIdx][day] = val;
             });
+
+            const allAttendance = JSON.parse(localStorage.getItem(DB_KEYS.ATTENDANCE));
+            const key = `${siteId}_${monthVal}`;
+            allAttendance[key] = data;
+            localStorage.setItem(DB_KEYS.ATTENDANCE, JSON.stringify(allAttendance));
+            
+            showToast('تم حفظ البيانات بنجاح', 'success');
         }
 
-        function deleteUser(id) {
-            if (confirm('هل أنت متأكد من حذف هذا المستخدم؟')) {
-                let users = JSON.parse(localStorage.getItem(DB_KEYS.USERS));
-                users = users.filter(u => u.id !== id);
-                localStorage.setItem(DB_KEYS.USERS, JSON.stringify(users));
-                loadSettingsView();
-                showToast('تم حذف المستخدم بنجاح.', 'info');
+        function approveReport(type) {
+            const siteId = document.getElementById('site-select').value;
+            const monthVal = document.getElementById('month-picker').value;
+            
+            if (!siteId || !monthVal) {
+                showToast('الرجاء اختيار التقرير أولاً', 'error');
+                return;
+            }
+            
+            const key = `${siteId}_${monthVal}`;
+            const allApprovals = JSON.parse(localStorage.getItem(DB_KEYS.APPROVALS));
+            const current = allApprovals[key] || { supervisor: false, approver: false };
+
+            if (type === 'supervisor') {
+                current.supervisor = true;
+                showToast('تم اعتماد مشرف الموقع', 'success');
+            } else if (type === 'approver') {
+                if (!current.supervisor) {
+                    showToast('لا يمكن الاعتماد قبل اعتماد مشرف الموقع', 'error');
+                    return;
+                }
+                current.approver = true;
+                showToast('تم اعتماد التقرير نهائياً', 'success');
+            }
+
+            allApprovals[key] = current;
+            localStorage.setItem(DB_KEYS.APPROVALS, JSON.stringify(allApprovals));
+            loadAttendanceTable();
+        }
+
+        function setupActionButtons(siteId, monthVal) {
+            const key = `${siteId}_${monthVal}`;
+            const allApprovals = JSON.parse(localStorage.getItem(DB_KEYS.APPROVALS));
+            const approvals = allApprovals[key] || { supervisor: false, approver: false };
+
+            const btnSave = document.getElementById('btn-save');
+            const btnApproveSup = document.getElementById('btn-approve-sup');
+            const btnApproveApp = document.getElementById('btn-approve-app');
+
+            // إظهار زر الحفظ دائماً للمستخدمين المسموح لهم
+            if (currentUser.role === 'admin' || currentUser.role === 'supervisor') {
+                btnSave.classList.remove('hidden');
+            } else {
+                btnSave.classList.add('hidden');
+            }
+
+            // إظهار أزرار الاعتماد حسب الصلاحيات
+            btnApproveSup.classList.add('hidden');
+            btnApproveApp.classList.add('hidden');
+
+            if (currentUser.role === 'supervisor' && !approvals.supervisor) {
+                btnApproveSup.classList.remove('hidden');
+            }
+            if (currentUser.role === 'approver' && approvals.supervisor && !approvals.approver) {
+                btnApproveApp.classList.remove('hidden');
             }
         }
 
-        function resetSystem() {
-            if (confirm('هل أنت متأكد من إعادة ضبط النظام؟ هذا الإجراء سيمسح جميع البيانات ولا يمكن التراجع عنه.')) {
-                // مسح جميع البيانات
-                localStorage.removeItem(DB_KEYS.USERS);
-                localStorage.removeItem(DB_KEYS.SITES);
-                localStorage.removeItem(DB_KEYS.ATTENDANCE);
-                localStorage.removeItem(DB_KEYS.SETTINGS);
-                localStorage.removeItem(DB_KEYS.APPROVALS);
-                localStorage.removeItem('currentUser');
-                localStorage.removeItem('currentScreen');
-                
-                // إعادة تهيئة النظام
-                initDB();
-                
-                // إعادة تحميل الصفحة
-                location.reload();
-                
-                showToast('تم إعادة ضبط النظام بنجاح', 'success');
+        // === نظام التوقيعات ===
+        function initSignaturePads() {
+            initializeCanvas('user-signature-canvas', 'user');
+            initializeCanvas('employee-signature-canvas', 'employee');
+            initializeCanvas('modal-signature-canvas', 'modal');
+
+            // إضافة مستمعي الأحداث لأزرار المسح
+            document.getElementById('clear-user-signature').addEventListener('click', () => clearSignature('user'));
+            document.getElementById('clear-employee-signature').addEventListener('click', () => clearSignature('employee'));
+            document.getElementById('clear-modal-signature').addEventListener('click', () => clearSignature('modal'));
+        }
+
+        function initializeCanvas(canvasId, type) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            
+            // تعيين حجم الكانفاس
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            
+            // تهيئة الكانفاس
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            // تعيين المتغيرات المناسبة
+            if (type === 'user') {
+                userSignatureCanvas = canvas;
+                userSignatureCtx = ctx;
+            } else if (type === 'employee') {
+                employeeSignatureCanvas = canvas;
+                employeeSignatureCtx = ctx;
+            } else if (type === 'modal') {
+                modalSignatureCanvas = canvas;
+                modalSignatureCtx = ctx;
             }
+
+            setupCanvasEvents(canvas, ctx, type);
+        }
+
+        function setupCanvasEvents(canvas, ctx, type) {
+            let isDrawing = false;
+            let lastX = 0;
+            let lastY = 0;
+
+            function getMousePos(canvas, evt) {
+                const rect = canvas.getBoundingClientRect();
+                return {
+                    x: evt.clientX - rect.left,
+                    y: evt.clientY - rect.top
+                };
+            }
+
+            function startDrawing(e) {
+                isDrawing = true;
+                const pos = getMousePos(canvas, e);
+                [lastX, lastY] = [pos.x, pos.y];
+            }
+
+            function draw(e) {
+                if (!isDrawing) return;
+                const pos = getMousePos(canvas, e);
+                
+                ctx.beginPath();
+                ctx.moveTo(lastX, lastY);
+                ctx.lineTo(pos.x, pos.y);
+                ctx.stroke();
+                
+                [lastX, lastY] = [pos.x, pos.y];
+            }
+
+            function stopDrawing() {
+                isDrawing = false;
+            }
+
+            // أحداث الماوس
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('mouseout', stopDrawing);
+
+            // أحداث اللمس
+            canvas.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (e.touches.length === 1) {
+                    startDrawing(e.touches[0]);
+                }
+            });
+            
+            canvas.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                if (e.touches.length === 1) {
+                    draw(e.touches[0]);
+                }
+            });
+            
+            canvas.addEventListener('touchend', stopDrawing);
         }
 
         function isCanvasNotEmpty(canvas) {
+            if (!canvas) return false;
             const ctx = canvas.getContext('2d');
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             const data = imageData.data;
@@ -1160,327 +1129,6 @@
                 }
             }
             return false;
-        }
-
-        function exportToPDF() {
-            const siteId = document.getElementById('site-select').value;
-            const monthVal = document.getElementById('month-picker').value;
-
-            if (!siteId || !monthVal) {
-                showToast('الرجاء اختيار الموقع والشهر أولاً.', 'error');
-                return;
-            }
-            
-            const settings = JSON.parse(localStorage.getItem(DB_KEYS.SETTINGS));
-            const sites = JSON.parse(localStorage.getItem(DB_KEYS.SITES));
-            const site = sites.find(s => s.id == siteId);
-            const siteName = site.name;
-            const logoSrc = settings.logo;
-            
-            const key = `${siteId}_${monthVal}`;
-            const allApprovals = JSON.parse(localStorage.getItem(DB_KEYS.APPROVALS));
-            const approvals = allApprovals[key] || { supervisor: false, approver: false };
-
-            // إنشاء قالب PDF ديناميكي مع فوتر ثابت في كل صفحة
-            const pdfTemplate = document.getElementById('pdf-template');
-            pdfTemplate.innerHTML = '';
-            
-            // نسخ الجدول الأصلي وتعديله للتصدير
-            const originalTable = document.getElementById('main-table');
-            const tableClone = originalTable.cloneNode(true);
-            
-            const inputs = tableClone.querySelectorAll('select.attendance-select');
-            inputs.forEach(input => {
-                const val = input.value;
-                const span = document.createElement('span');
-                span.innerText = val || 'P';
-                span.style.fontWeight = 'bold';
-                input.parentNode.replaceChild(span, input);
-            });
-
-            const buttons = tableClone.querySelectorAll('button');
-            buttons.forEach(button => button.remove());
-            
-            const dropdowns = tableClone.querySelectorAll('.signature-dropdown-content');
-            dropdowns.forEach(dropdown => dropdown.remove());
-            
-            // إعداد التوقيعات
-            const users = JSON.parse(localStorage.getItem(DB_KEYS.USERS));
-            const supervisorUser = users.find(u => u.role === 'supervisor'); 
-            const approverUser = users.find(u => u.role === 'approver');
-
-            const createSigImg = (src) => `<img src="${src}" style="height: 60px; max-width: 150px; object-fit: contain;">`;
-
-            let supervisorSignature = '';
-            let approverSignature = '';
-            
-            if(approvals.supervisor && supervisorUser && supervisorUser.signature) {
-                supervisorSignature = createSigImg(supervisorUser.signature);
-            } else if (approvals.supervisor) {
-                supervisorSignature = `<span style="color:green; font-family:'Courier'">تم الاعتماد (بدون توقيع مرفوع)</span>`;
-            } else {
-                supervisorSignature = `<div style="border-bottom: 1px dashed #000; width: 200px; margin-top: 40px;"></div>`;
-            }
-
-            if(approvals.approver && approverUser && approverUser.signature) {
-                approverSignature = createSigImg(approverUser.signature);
-            } else if (approvals.approver) {
-                approverSignature = `<span style="color:green; font-family:'Courier'">تم الاعتماد (بدون توقيع مرفوع)</span>`;
-            } else {
-                approverSignature = `<div style="border-bottom: 1px dashed #000; width: 200px; margin-top: 40px;"></div>`;
-            }
-
-            // إنشاء صفحات PDF مع فوتر ثابت في كل صفحة
-            const createPDFPage = (content, pageNum, totalPages) => {
-                const pageDiv = document.createElement('div');
-                pageDiv.className = 'pdf-page';
-                
-                // رأس الصفحة
-                let headerHTML = `
-                    <div class="pdf-header">
-                        <div style="position: relative; height: 120px; display: flex; align-items: center; justify-content: center;">
-                            ${logoSrc ? `<img src="${logoSrc}" style="position: absolute; left: 0; top: 10px; height: 100px; width: 100px; object-fit: contain;">` : ''}
-                            
-                            <h1 style="font-family: 'PT Serif', serif; font-size: 20pt; font-weight: bold; text-align: center; width: 100%; color: #166534;">
-                                شركة الجزيرة الخضراء لتجارة المواشي والأغنام
-                            </h1>
-                        </div>
-
-                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 16pt; font-weight: bold; margin-top: 10px;">
-                            <div style="text-align: right;">التاريخ: <span>${monthVal}</span></div>
-                            <div style="text-align: left;">الموقع: <span>${siteName}</span></div>
-                        </div>
-                    </div>
-                `;
-                
-                // محتوى الصفحة
-                let contentHTML = `
-                    <div style="margin-bottom: 20px;">
-                        ${content}
-                    </div>
-                `;
-                
-                // تذييل الصفحة الثابت
-                let footerHTML = `
-                    <div class="pdf-footer">
-                        <div style="direction: ltr;">Info@grisland.com</div>
-                        <div style="text-align: center;">0568504018- الشهامة الجديدة - مسلخ الشهامة</div>
-                        <div>صفحة ${pageNum} من ${totalPages}</div>
-                    </div>
-                `;
-                
-                // توقيعات في الصفحة الأخيرة فقط
-                if (pageNum === totalPages) {
-                    contentHTML += `
-                        <div style="margin-top: 50px; display: flex; justify-content: space-around; width: 100%;">
-                            <div style="text-align: center; width: 250px;">
-                                <p style="font-weight: bold; font-size: 16pt; margin-bottom: 15px;">معتمد التقرير</p>
-                                <div style="min-height: 80px; display: flex; justify-content: center; align-items: center;">
-                                    ${approverSignature}
-                                </div>
-                            </div>
-
-                            <div style="text-align: center; width: 250px;">
-                                <p style="font-weight: bold; font-size: 16pt; margin-bottom: 15px;">مشرف الموقع</p>
-                                <div style="min-height: 80px; display: flex; justify-content: center; align-items: center;">
-                                    ${supervisorSignature}
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }
-                
-                pageDiv.innerHTML = headerHTML + contentHTML + footerHTML;
-                pdfTemplate.appendChild(pageDiv);
-            };
-
-            // تقسيم الجدول إلى صفحات إذا كان كبيراً
-            const rows = tableClone.querySelectorAll('tbody tr');
-            const rowsPerPage = 15; // عدد الصفوف في كل صفحة
-            const totalPages = Math.ceil(rows.length / rowsPerPage);
-            
-            for (let page = 1; page <= totalPages; page++) {
-                const startIndex = (page - 1) * rowsPerPage;
-                const endIndex = Math.min(startIndex + rowsPerPage, rows.length);
-                
-                // إنشاء جدول جديد للصفحة الحالية
-                const pageTable = document.createElement('table');
-                pageTable.style.width = "100%";
-                pageTable.style.fontSize = "10px";
-                pageTable.style.borderCollapse = "collapse";
-                pageTable.style.fontFamily = "'Cairo', sans-serif";
-                
-                // نسخ الهيدر
-                const headerClone = tableClone.querySelector('thead').cloneNode(true);
-                pageTable.appendChild(headerClone);
-                
-                // إضافة الصفوف للصفحة الحالية
-                const tbody = document.createElement('tbody');
-                for (let i = startIndex; i < endIndex; i++) {
-                    tbody.appendChild(rows[i].cloneNode(true));
-                }
-                pageTable.appendChild(tbody);
-                
-                // إنشاء الصفحة
-                createPDFPage(pageTable.outerHTML, page, totalPages);
-            }
-
-            pdfTemplate.style.display = 'block'; 
-            
-            const opt = {
-                margin: 0.2,
-                filename: `تقرير_${siteName}_${monthVal}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { 
-                    scale: 2, 
-                    useCORS: true,
-                    scrollY: 0
-                },
-                jsPDF: { 
-                    unit: 'in', 
-                    format: 'a4', 
-                    orientation: 'landscape' 
-                }
-            };
-
-            html2pdf().set(opt).from(pdfTemplate).save().then(() => {
-                pdfTemplate.style.display = 'none'; 
-                showToast('تم تصدير التقرير بنجاح', 'success');
-            });
-        }
-
-        function getRoleName(role) {
-            const map = {
-                'admin': 'مدير النظام',
-                'supervisor': 'مشرف الموقع',
-                'approver': 'معتمد التقارير',
-                'contract_manager': 'مدير العقد'
-            };
-            return map[role] || role;
-        }
-
-        function initSignaturePads() {
-            // تهيئة لوحة توقيع المستخدم
-            userSignatureCanvas = document.getElementById('user-signature-canvas');
-            userSignatureCtx = userSignatureCanvas.getContext('2d');
-            userSignatureCanvas.width = userSignatureCanvas.offsetWidth * 2;
-            userSignatureCanvas.height = userSignatureCanvas.offsetHeight * 2;
-            userSignatureCanvas.style.width = userSignatureCanvas.offsetWidth + 'px';
-            userSignatureCanvas.style.height = userSignatureCanvas.offsetHeight + 'px';
-            userSignatureCtx.scale(2, 2);
-            userSignatureCtx.fillStyle = 'white';
-            userSignatureCtx.fillRect(0, 0, userSignatureCanvas.width, userSignatureCanvas.height);
-            userSignatureCtx.strokeStyle = '#000';
-            userSignatureCtx.lineWidth = 2;
-            userSignatureCtx.lineCap = 'round';
-            userSignatureCtx.lineJoin = 'round';
-
-            // تهيئة لوحة توقيع الموظف
-            employeeSignatureCanvas = document.getElementById('employee-signature-canvas');
-            employeeSignatureCtx = employeeSignatureCanvas.getContext('2d');
-            employeeSignatureCanvas.width = employeeSignatureCanvas.offsetWidth * 2;
-            employeeSignatureCanvas.height = employeeSignatureCanvas.offsetHeight * 2;
-            employeeSignatureCanvas.style.width = employeeSignatureCanvas.offsetWidth + 'px';
-            employeeSignatureCanvas.style.height = employeeSignatureCanvas.offsetHeight + 'px';
-            employeeSignatureCtx.scale(2, 2);
-            employeeSignatureCtx.fillStyle = 'white';
-            employeeSignatureCtx.fillRect(0, 0, employeeSignatureCanvas.width, employeeSignatureCanvas.height);
-            employeeSignatureCtx.strokeStyle = '#000';
-            employeeSignatureCtx.lineWidth = 2;
-            employeeSignatureCtx.lineCap = 'round';
-            employeeSignatureCtx.lineJoin = 'round';
-
-            // تهيئة لوحة توقيع المودال
-            modalSignatureCanvas = document.getElementById('modal-signature-canvas');
-            modalSignatureCtx = modalSignatureCanvas.getContext('2d');
-            modalSignatureCanvas.width = modalSignatureCanvas.offsetWidth * 2;
-            modalSignatureCanvas.height = modalSignatureCanvas.offsetHeight * 2;
-            modalSignatureCanvas.style.width = modalSignatureCanvas.offsetWidth + 'px';
-            modalSignatureCanvas.style.height = modalSignatureCanvas.offsetHeight + 'px';
-            modalSignatureCtx.scale(2, 2);
-            modalSignatureCtx.fillStyle = 'white';
-            modalSignatureCtx.fillRect(0, 0, modalSignatureCanvas.width, modalSignatureCanvas.height);
-            modalSignatureCtx.strokeStyle = '#000';
-            modalSignatureCtx.lineWidth = 2;
-            modalSignatureCtx.lineCap = 'round';
-            modalSignatureCtx.lineJoin = 'round';
-
-            // إضافة مستمعي الأحداث للوحة توقيع المستخدم
-            setupCanvasEvents(userSignatureCanvas, userSignatureCtx, 'user');
-            
-            // إضافة مستمعي الأحداث للوحة توقيع الموظف
-            setupCanvasEvents(employeeSignatureCanvas, employeeSignatureCtx, 'employee');
-            
-            // إضافة مستمعي الأحداث للوحة توقيع المودال
-            setupCanvasEvents(modalSignatureCanvas, modalSignatureCtx, 'modal');
-
-            // إضافة مستمعي الأحداث لأزرار المسح
-            document.getElementById('clear-user-signature').addEventListener('click', () => clearSignature('user'));
-            document.getElementById('clear-employee-signature').addEventListener('click', () => clearSignature('employee'));
-            document.getElementById('clear-modal-signature').addEventListener('click', () => clearSignature('modal'));
-        }
-
-        function setupCanvasEvents(canvas, ctx, type) {
-            const getCoordinates = (e) => {
-                const rect = canvas.getBoundingClientRect();
-                let clientX, clientY;
-                
-                if (e.type.includes('touch')) {
-                    clientX = e.touches[0].clientX;
-                    clientY = e.touches[0].clientY;
-                } else {
-                    clientX = e.clientX;
-                    clientY = e.clientY;
-                }
-                
-                return {
-                    x: (clientX - rect.left) * (canvas.width / rect.width / 2),
-                    y: (clientY - rect.top) * (canvas.height / rect.height / 2)
-                };
-            };
-
-            const startDrawing = (e) => {
-                if (type === 'user') isUserDrawing = true;
-                else if (type === 'employee') isEmployeeDrawing = true;
-                else if (type === 'modal') isModalDrawing = true;
-                
-                const coords = getCoordinates(e);
-                ctx.beginPath();
-                ctx.moveTo(coords.x, coords.y);
-                ctx.lineTo(coords.x, coords.y);
-                ctx.stroke();
-                
-                e.preventDefault();
-            };
-
-            const drawFunc = (e) => {
-                if (type === 'user' && !isUserDrawing) return;
-                if (type === 'employee' && !isEmployeeDrawing) return;
-                if (type === 'modal' && !isModalDrawing) return;
-                
-                const coords = getCoordinates(e);
-                ctx.lineTo(coords.x, coords.y);
-                ctx.stroke();
-                
-                e.preventDefault();
-            };
-
-            const stopDrawing = () => {
-                if (type === 'user') isUserDrawing = false;
-                else if (type === 'employee') isEmployeeDrawing = false;
-                else if (type === 'modal') isModalDrawing = false;
-                
-                ctx.beginPath();
-            };
-
-            canvas.addEventListener('mousedown', startDrawing);
-            canvas.addEventListener('mousemove', drawFunc);
-            canvas.addEventListener('mouseup', stopDrawing);
-            canvas.addEventListener('mouseout', stopDrawing);
-            
-            canvas.addEventListener('touchstart', startDrawing, { passive: false });
-            canvas.addEventListener('touchmove', drawFunc, { passive: false });
-            canvas.addEventListener('touchend', stopDrawing);
         }
 
         function clearSignature(type) {
@@ -1497,19 +1145,17 @@
                 ctx = modalSignatureCtx;
             }
             
-            ctx.fillStyle = 'white';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.strokeStyle = '#000';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
+            if (canvas && ctx) {
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.beginPath();
+            }
         }
 
         function openSignatureModal(type, id, empIndex = null) {
             currentSignatureType = type;
             currentSignatureId = id;
-            if (type === 'employee') {
-                currentEmpIndex = empIndex;
-            }
+            currentEmpIndex = empIndex;
             
             clearSignature('modal');
             
@@ -1529,17 +1175,18 @@
 
         function closeSignatureModal() {
             document.getElementById('signature-modal').style.display = 'none';
-            currentSignatureType = null;
-            currentSignatureId = null;
-            currentEmpIndex = null;
         }
 
         function saveSignature() {
+            if (!modalSignatureCanvas) return;
+
+            const signatureData = modalSignatureCanvas.toDataURL();
+            
             if (currentSignatureType === 'user') {
                 const users = JSON.parse(localStorage.getItem(DB_KEYS.USERS));
                 const userIndex = users.findIndex(u => u.id === currentSignatureId);
                 if (userIndex !== -1) {
-                    users[userIndex].signature = modalSignatureCanvas.toDataURL();
+                    users[userIndex].signature = signatureData;
                     localStorage.setItem(DB_KEYS.USERS, JSON.stringify(users));
                     showToast('تم حفظ توقيع المستخدم بنجاح', 'success');
                     loadSettingsView();
@@ -1548,7 +1195,7 @@
                 const sites = JSON.parse(localStorage.getItem(DB_KEYS.SITES));
                 const siteIndex = sites.findIndex(s => s.id === currentSignatureId);
                 if (siteIndex !== -1) {
-                    sites[siteIndex].employees[currentEmpIndex].signature = modalSignatureCanvas.toDataURL();
+                    sites[siteIndex].employees[currentEmpIndex].signature = signatureData;
                     localStorage.setItem(DB_KEYS.SITES, JSON.stringify(sites));
                     showToast('تم حفظ توقيع الموظف بنجاح', 'success');
                     loadAttendanceTable();
@@ -1558,15 +1205,84 @@
             closeSignatureModal();
         }
 
-        document.getElementById('menu-toggle').addEventListener('click', () => {
-            document.getElementById('sidebar').classList.toggle('open');
-        });
+        // === وظائف مساعدة ===
+        function getRoleName(role) {
+            const roles = {
+                'admin': 'مدير النظام',
+                'supervisor': 'مشرف الموقع',
+                'approver': 'معتمد التقارير',
+                'contract_manager': 'مدير العقد'
+            };
+            return roles[role] || role;
+        }
 
-        // تهيئة النظام عند تحميل الصفحة
+        function loadSidebarData() {
+            const settings = JSON.parse(localStorage.getItem(DB_KEYS.SETTINGS));
+            const logoImg = document.getElementById('sidebar-logo');
+            const noLogo = document.getElementById('no-logo-text');
+            
+            if (settings.logo) {
+                logoImg.src = settings.logo;
+                logoImg.classList.remove('hidden');
+                noLogo.classList.add('hidden');
+            } else {
+                logoImg.classList.add('hidden');
+                noLogo.classList.remove('hidden');
+            }
+        }
+
+        function handleLogoUpload(input) {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const settings = JSON.parse(localStorage.getItem(DB_KEYS.SETTINGS));
+                    settings.logo = e.target.result;
+                    localStorage.setItem(DB_KEYS.SETTINGS, JSON.stringify(settings));
+                    loadSidebarData();
+                    showToast('تم تحديث الشعار', 'success');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function resetSystem() {
+            if (confirm('هل أنت متأكد من إعادة ضبط النظام؟ هذا الإجراء سيمسح جميع البيانات ولا يمكن التراجع عنه.')) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
+        function exportToPDF() {
+            showToast('خاصية التصدير إلى PDF قيد التطوير', 'info');
+        }
+
+        // === تهيئة النظام ===
         document.addEventListener('DOMContentLoaded', function() {
             initDB();
-            restoreUserState();
-            initSignaturePads();
+            
+            // محاولة استعادة جلسة المستخدم
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                try {
+                    currentUser = JSON.parse(savedUser);
+                    document.getElementById('login-overlay').style.display = 'none';
+                    document.getElementById('user-display').innerText = `${currentUser.name} (${getRoleName(currentUser.role)})`;
+                    loadSidebarData();
+                    setupUIForRole();
+                } catch (e) {
+                    console.error('Error restoring user session:', e);
+                    localStorage.removeItem('currentUser');
+                }
+            }
+
+            // إعداد القائمة الجانبية للجوّال
+            document.getElementById('menu-toggle').addEventListener('click', function() {
+                document.getElementById('sidebar').classList.toggle('open');
+            });
+
+            // تعيين التاريخ الحالي افتراضياً
+            document.getElementById('month-picker').value = currentMonth;
         });
 
     </script>
